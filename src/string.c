@@ -1,4 +1,5 @@
 #include "aura/string.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -39,6 +40,16 @@ void aura_string_put(aura_String_t *string, const char *data) {
 void aura_string_clear(aura_String_t *string) {
   memset(string->data, 0, string->len * sizeof(char));
   string->len = 0;
+}
+
+bool aura_string_in(aura_String_t *string, char c) {
+  for (size_t i = 0; i < string->len; ++i) {
+    if (string->data[i] == c) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 void aura_string_destroy(aura_String_t *string) {

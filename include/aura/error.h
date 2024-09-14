@@ -3,21 +3,31 @@
 
 #include "aura/state.h"
 
+#define AURA_REPORT_ERRORS 1
+#define AURA_EXIT_ON_ERROR 1
+
+#if AURA_EXIT_ON_ERROR == 1
+#define AURA_EXIT(x) exit(x);
+#else
+#define AURA_EXIT(x)
+#endif
+
+#if AURA_REPORT_ERRORS == 1
 #define AURA_RUNTIME_ERROR(...)                                                \
   do {                                                                         \
     fprintf(stderr, "Aura Runtime Error: ");                                   \
     fprintf(stderr, __VA_ARGS__);                                              \
+    AURA_EXIT(1)                                                               \
   } while (0);
+
+#else
+#define AURA_RUNTIME_ERROR(...)
+#endif
 
 typedef enum {
   AURA_RUNTIME_ERROR_NONE,
   AURA_RUNTIME_ERROR_UNDEFINED_PATH,
+  AURA_RUNTIME_ERROR_UNDEFINED_INPUT,
 } aura_RuntimeErrorType;
-
-typedef struct {
-  aura_RuntimeErrorType type;
-  aura_State_t *state;
-  char trigger;
-} aura_RuntimeError_t;
 
 #endif // AURA_ERROR_H_

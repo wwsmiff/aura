@@ -13,6 +13,8 @@ int main() {
   aura_DFA_Machine_add_state(dfa_machine, "q0");
   aura_DFA_Machine_add_state(dfa_machine, "q1");
   aura_DFA_Machine_add_state(dfa_machine, "q2");
+  aura_DFA_Machine_add_state(dfa_machine, "q3");
+
   aura_DFA_Machine_set_input(dfa_machine, "ab");
 
   aura_state_set(aura_DFA_Machine_get_state(dfa_machine, "q0"),
@@ -21,18 +23,19 @@ int main() {
                  AURA_STATE_FINAL | AURA_STATE_GENERAL);
 
   aura_DFA_Machine_set_path(dfa_machine, "q0", 'a', "q1");
+  aura_DFA_Machine_set_path(dfa_machine, "q0", 'b', "q3");
   aura_DFA_Machine_set_path(dfa_machine, "q1", 'a', "q1");
   aura_DFA_Machine_set_path(dfa_machine, "q1", 'b', "q2");
   aura_DFA_Machine_set_path(dfa_machine, "q2", 'a', "q0");
   aura_DFA_Machine_set_path(dfa_machine, "q2", 'b', "q2");
+  aura_DFA_Machine_set_path(dfa_machine, "q3", 'a', "q3");
+  aura_DFA_Machine_set_path(dfa_machine, "q3", 'b', "q3");
 
-  aura_RuntimeError_t err = aura_DFA_Machine_run(dfa_machine, "abb");
-
-  if (err.type == AURA_RUNTIME_ERROR_UNDEFINED_PATH) {
-    AURA_RUNTIME_ERROR("Undefined path for state '%s' input '%c'.\n",
-                       err.state->label.data, err.trigger);
-    return 1;
-  }
+  aura_DFA_Machine_run(dfa_machine, "aabaab");
+  aura_DFA_Machine_run(dfa_machine, "baab");
+  aura_DFA_Machine_run(dfa_machine, "baa");
+  aura_DFA_Machine_run(dfa_machine, "caab");
+  aura_DFA_Machine_run(dfa_machine, "ab");
 
   aura_DFA_Machine_destroy(dfa_machine);
 

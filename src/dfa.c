@@ -1,5 +1,6 @@
 #include "aura/dfa.h"
 #include "aura/error.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -78,8 +79,8 @@ aura_State_t *aura_DFA_Machine_get_state(aura_DFA_Machine_t *machine,
   return machine->states[hash];
 }
 
-aura_RuntimeError_t aura_DFA_Machine_run(aura_DFA_Machine_t *machine,
-                                         const char *input) {
+aura_RuntimeErrorType aura_DFA_Machine_run(aura_DFA_Machine_t *machine,
+                                           const char *input) {
   for (size_t i = 0; i < MAX_STATES; ++i) {
     if (machine->states[i] != NULL) {
       if (machine->states[i]->type & AURA_STATE_INITIAL) {
@@ -89,27 +90,44 @@ aura_RuntimeError_t aura_DFA_Machine_run(aura_DFA_Machine_t *machine,
   }
 
   size_t len = strlen(input);
+  char input_mismatch = '\0';
+
+  for (size_t i = 0; i < len; ++i) {
+    if (aura_string_in(&machine->input, input[i]) == false) {
+      input_mismatch = input[i];
+      break;
+    }
+  }
+
+  if (input_mismatch != '\0') {
+    AURA_RUNTIME_ERROR("'%c' is not a part of the input set.\n",
+                       input_mismatch);
+    return AURA_RUNTIME_ERROR_UNDEFINED_INPUT;
+  }
 
   for (int i = 0; i < len; ++i) {
-    aura_State_t *next_state = aura_DFA_Machine_get_path(
-        machine, machine->current_state->label.data, input[i]);
+    const char *src = machine->current_state->label.data;
+
+    aura_State_t *next_state =
+        aura_DFA_Machine_get_path(machine, src, input[i]);
     if (next_state != NULL) {
       machine->current_state = next_state;
     }
+
     if (next_state == NULL) {
-      return (aura_RuntimeError_t){.type = AURA_RUNTIME_ERROR_UNDEFINED_PATH,
-                                   .state = machine->current_state,
-                                   .trigger = input[i]};
+      AURA_RUNTIME_ERROR("Undefined path for state '%s' input '%c'.\n",
+                         machine->current_state->label.data, input[i]);
+      return AURA_RUNTIME_ERROR_UNDEFINED_PATH;
     }
   }
-  aura_state_print(machine->current_state);
+
   if (machine->current_state->type & AURA_STATE_FINAL) {
-    printf("status: INPUT ACCEPETED\n");
+    printf("test case: '%s', status: INPUT ACCEPETED\n", input);
   } else {
-    printf("status: INPUT NOT ACCEPETED\n");
+    printf("test case: '%s', status: INPUT NOT ACCEPETED\n", input);
   }
-  return (aura_RuntimeError_t){
-      .type = AURA_RUNTIME_ERROR_NONE, .state = NULL, .trigger = '\0'};
+
+  return AURA_RUNTIME_ERROR_NONE;
 }
 
 void aura_DFA_Machine_destroy(aura_DFA_Machine_t *machine) {
