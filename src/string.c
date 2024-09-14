@@ -36,6 +36,11 @@ void aura_string_put(aura_String_t *string, const char *data) {
   }
 }
 
+void aura_string_clear(aura_String_t *string) {
+  memset(string->data, 0, string->len * sizeof(char));
+  string->len = 0;
+}
+
 void aura_string_destroy(aura_String_t *string) {
   free(string->data);
   string->len = 0;

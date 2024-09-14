@@ -7,10 +7,13 @@
 aura_DFA_Machine_t *aura_DFA_Machine_create() {
   aura_DFA_Machine_t *machine =
       (aura_DFA_Machine_t *)(malloc(sizeof(aura_DFA_Machine_t)));
-  machine->input = aura_string_create();
   for (size_t i = 0; i < MAX_STATES; ++i) {
     machine->states[i] = NULL;
   }
+  machine->current_state = NULL;
+  machine->input = aura_string_create();
+  machine->active_states = 0;
+  machine->path_len = 0;
   return machine;
 }
 
@@ -75,16 +78,6 @@ aura_State_t *aura_DFA_Machine_get_state(aura_DFA_Machine_t *machine,
   return machine->states[hash];
 }
 
-void aura_DFA_Machine_destroy(aura_DFA_Machine_t *machine) {
-  for (size_t i = 0; i < MAX_STATES; ++i) {
-    if (machine->states[i] != NULL) {
-      aura_state_destroy(machine->states[i]);
-    }
-  }
-  aura_string_destroy(&machine->input);
-  free(machine);
-}
-
 aura_RuntimeError_t aura_DFA_Machine_run(aura_DFA_Machine_t *machine,
                                          const char *input) {
   for (size_t i = 0; i < MAX_STATES; ++i) {
@@ -117,4 +110,17 @@ aura_RuntimeError_t aura_DFA_Machine_run(aura_DFA_Machine_t *machine,
   }
   return (aura_RuntimeError_t){
       .type = AURA_RUNTIME_ERROR_NONE, .state = NULL, .trigger = '\0'};
+}
+
+void aura_DFA_Machine_destroy(aura_DFA_Machine_t *machine) {
+  for (size_t i = 0; i < MAX_STATES; ++i) {
+    if (machine->states[i] != NULL) {
+      aura_state_destroy(machine->states[i]);
+      machine->states[i] = NULL;
+    }
+  }
+
+  free(machine->paths);
+  aura_string_destroy(&machine->input);
+  free(machine);
 }
