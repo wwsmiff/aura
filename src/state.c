@@ -12,17 +12,24 @@ aura_State_t *aura_state_create(aura_StateType type, const char *label) {
 }
 
 void aura_state_print(aura_State_t *state) {
-  printf("aura_state(type: ");
-  if (state->type & AURA_STATE_GENERAL) {
-    printf("general, ");
+  printf("aura_state(type: {");
+
+  if (state->type & AURA_STATE_GENERAL && state->type & AURA_STATE_FINAL &&
+      state->type & AURA_STATE_INITIAL) {
+    printf("general, initial, final");
   }
-  if (state->type & AURA_STATE_INITIAL) {
-    printf("initial, ");
+
+  else if (state->type & AURA_STATE_GENERAL) {
+    printf("general");
+    if (state->type & AURA_STATE_INITIAL) {
+      printf(", initial");
+    }
+    if (state->type & AURA_STATE_FINAL) {
+      printf(", final");
+    }
   }
-  if (state->type & AURA_STATE_FINAL) {
-    printf("final, ");
-  }
-  printf("label: '");
+
+  printf("}, label: '");
   for (size_t i = 0; i < state->label.len; ++i) {
     printf("%c", state->label.data[i]);
   }

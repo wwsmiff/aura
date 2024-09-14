@@ -1,6 +1,7 @@
 #ifndef AURA_DFA_H_
 #define AURA_DFA_H_
 
+#include "aura/error.h"
 #include "aura/state.h"
 #include "aura/string.h"
 
@@ -30,7 +31,8 @@ void aura_DFA_Machine_add_state(aura_DFA_Machine_t *machine, const char *label);
 void aura_DFA_Machine_set_path(aura_DFA_Machine_t *machine, const char *src,
                                char trigger, const char *dest);
 
-void aura_DFA_Machine_run(aura_DFA_Machine_t *machine, const char *input);
+aura_RuntimeError_t aura_DFA_Machine_run(aura_DFA_Machine_t *machine,
+                                         const char *input);
 
 aura_State_t *aura_DFA_Machine_get_state(aura_DFA_Machine_t *machine,
                                          const char *label);

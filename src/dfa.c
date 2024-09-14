@@ -1,4 +1,5 @@
 #include "aura/dfa.h"
+#include "aura/error.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -84,7 +85,8 @@ void aura_DFA_Machine_destroy(aura_DFA_Machine_t *machine) {
   free(machine);
 }
 
-void aura_DFA_Machine_run(aura_DFA_Machine_t *machine, const char *input) {
+aura_RuntimeError_t aura_DFA_Machine_run(aura_DFA_Machine_t *machine,
+                                         const char *input) {
   for (size_t i = 0; i < MAX_STATES; ++i) {
     if (machine->states[i] != NULL) {
       if (machine->states[i]->type & AURA_STATE_INITIAL) {
@@ -101,6 +103,18 @@ void aura_DFA_Machine_run(aura_DFA_Machine_t *machine, const char *input) {
     if (next_state != NULL) {
       machine->current_state = next_state;
     }
+    if (next_state == NULL) {
+      return (aura_RuntimeError_t){.type = AURA_RUNTIME_ERROR_UNDEFINED_PATH,
+                                   .state = machine->current_state,
+                                   .trigger = input[i]};
+    }
   }
   aura_state_print(machine->current_state);
+  if (machine->current_state->type & AURA_STATE_FINAL) {
+    printf("status: INPUT ACCEPETED\n");
+  } else {
+    printf("status: INPUT NOT ACCEPETED\n");
+  }
+  return (aura_RuntimeError_t){
+      .type = AURA_RUNTIME_ERROR_NONE, .state = NULL, .trigger = '\0'};
 }
