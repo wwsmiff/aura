@@ -1,11 +1,10 @@
-#include "aura/dfa.h"
-#include "aura/error.h"
-#include "aura/state.h"
-#include "aura/string.h"
+/* Test to define a DFA which accepts
+ * inputs {'a', 'b'} but is accepeted
+ * only if the string ends with starts
+ * with at least one 'a' and ends with 'b'.
+ */
 
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include "aura/dfa.h"
 
 int main() {
   aura_DFA_Machine_t *dfa_machine = aura_DFA_Machine_create();

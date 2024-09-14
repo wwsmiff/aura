@@ -26,4 +26,5 @@ endfunction()
 
 if(${AURA_BUILD_TESTS})
   add_test("${CMAKE_SOURCE_DIR}/tests/DFA/test_1.c" dfa_test_1)
+  add_test("${CMAKE_SOURCE_DIR}/tests/DFA/test_2.c" dfa_test_2)
 endif()
