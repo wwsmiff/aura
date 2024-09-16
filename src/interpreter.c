@@ -43,15 +43,15 @@ aura_TokenCollection_t aura_tokenize_line(aura_String_t *str) {
       tokens.data[tokens.size++] = (aura_Token_t){
           .type = AURA_TOKEN_RBRACE, .value = aura_string_create_and_put("}")};
     } else if (str->data[i] == '=') {
-      if ((i - 1) >= 0 && str->data[i - 1] == ':') {
+      tokens.data[tokens.size++] =
+          (aura_Token_t){.type = AURA_TOKEN_INITIALIZE,
+                         .value = aura_string_create_and_put("=")};
+    } else if (str->data[i] == ':') {
+      if ((i + 1) < str->len && str->data[i + 1] == '=') {
         tokens.data[tokens.size++] =
             (aura_Token_t){.type = AURA_TOKEN_DEFINE,
                            .value = aura_string_create_and_put(":=")};
         continue;
-      } else {
-        tokens.data[tokens.size++] =
-            (aura_Token_t){.type = AURA_TOKEN_INITIALIZE,
-                           .value = aura_string_create_and_put("=")};
       }
     } else if (str->data[i] == '(') {
       tokens.data[tokens.size++] = (aura_Token_t){
@@ -61,10 +61,26 @@ aura_TokenCollection_t aura_tokenize_line(aura_String_t *str) {
           .type = AURA_TOKEN_RPAREN, .value = aura_string_create_and_put(")")};
     } else if (isalpha(str->data[i])) {
       aura_String_t id = aura_handle_id(str, &i);
-      // printf("id: ");
-      // aura_string_print(&id);
       tokens.data[tokens.size++] =
           (aura_Token_t){.type = AURA_TOKEN_ID, .value = id};
+    } else if (str->data[i] == '-') {
+      if ((i + 1) < str->len && str->data[i + 1] == '>') {
+        tokens.data[tokens.size++] =
+            (aura_Token_t){.type = AURA_TOKEN_PATH_CONSTRUCT,
+                           .value = aura_string_create_and_put("->")};
+        i++;
+        continue;
+      }
+    } else if (str->data[i] == ',') {
+      tokens.data[tokens.size++] = (aura_Token_t){
+          .type = AURA_TOKEN_COMMA, .value = aura_string_create_and_put(",")};
+    } else if (str->data[i] == '"' || str->data[i] == '\'') {
+      tokens.data[tokens.size++] = (aura_Token_t){
+          .type = AURA_TOKEN_QUOTE, .value = aura_string_create_and_put("'")};
+    } else if (isspace(str->data[i])) {
+      continue;
+    } else {
+      AURA_COMPILETIME_ERROR("Unexpected character: '%c'.\n", str->data[i]);
     }
   }
   return tokens;
@@ -96,10 +112,11 @@ void aura_interpreter_run_line(aura_Interpreter_t *interpreter,
                                const char *src) {
   aura_string_clear(&interpreter->line);
   aura_string_put(&interpreter->line, src);
-  interpreter->line.len--; // Omit '\n'
+  interpreter->line.len--;
   aura_TokenCollection_t tokens = aura_tokenize_line(&interpreter->line);
   for (size_t i = 0; i < tokens.size; ++i) {
-    aura_token_print(&tokens.data[i]);
+    aura_Token_t *token = &tokens.data[i];
+    aura_token_print(token);
   }
   aura_token_collection_destroy(&tokens);
 }

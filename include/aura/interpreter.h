@@ -17,19 +17,25 @@ typedef enum {
   AURA_TOKEN_RPAREN,
   AURA_TOKEN_DEFINE,
   AURA_TOKEN_INITIALIZE,
+  AURA_TOKEN_PATH_CONSTRUCT,
+  AURA_TOKEN_COMMA,
+  AURA_TOKEN_QUOTE,
 } aura_TokenType;
 
 /* clang-format off */
 
 static const char const *aura_token_str_table[] = {
-  [AURA_TOKEN_COMMENT] = "comment",         
-  [AURA_TOKEN_ID] = "id",         
-  [AURA_TOKEN_LBRACE] = "lbrace",
-  [AURA_TOKEN_RBRACE] = "rbrace", 
-  [AURA_TOKEN_LPAREN] = "lparen",
-  [AURA_TOKEN_RPAREN] = "rparen",
-  [AURA_TOKEN_DEFINE] = "define",
-  [AURA_TOKEN_INITIALIZE] = "initialize",
+  [AURA_TOKEN_COMMENT] = "token_comment",         
+  [AURA_TOKEN_ID] = "token_id",         
+  [AURA_TOKEN_LBRACE] = "token_lbrace",
+  [AURA_TOKEN_RBRACE] = "token_rbrace", 
+  [AURA_TOKEN_LPAREN] = "token_lparen",
+  [AURA_TOKEN_RPAREN] = "token_rparen",
+  [AURA_TOKEN_DEFINE] = "token_define",
+  [AURA_TOKEN_INITIALIZE] = "token_initialize",
+  [AURA_TOKEN_PATH_CONSTRUCT] = "token_path_construct",
+  [AURA_TOKEN_COMMA] = "token_comma",
+  [AURA_TOKEN_QUOTE] = "token_quote",
 };
 
 /* clang-format off */
