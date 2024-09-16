@@ -12,6 +12,7 @@ set(AURA_SOURCES
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/include")
 target_sources(${PROJECT_NAME} PRIVATE
   ${AURA_SOURCES}
+  src/interpreter.c
   src/main.c
 )
 

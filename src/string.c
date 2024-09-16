@@ -52,6 +52,12 @@ bool aura_string_in(aura_String_t *string, char c) {
   return false;
 }
 
+aura_String_t aura_string_create_and_put(const char *data) {
+  aura_String_t string = aura_string_create();
+  aura_string_put(&string, data);
+  return string;
+}
+
 void aura_string_destroy(aura_String_t *string) {
   free(string->data);
   string->len = 0;
