@@ -30,10 +30,11 @@ aura_TokenCollection_t aura_tokenize_line(aura_String_t *str) {
   tokens.data = (aura_Token_t *)(malloc(sizeof(aura_Token_t) * str->len));
   for (size_t i = 0; i < str->len; ++i) {
     if (str->data[i] == '#') {
-      tokens.data[tokens.size++] = (aura_Token_t){
-          .type = AURA_TOKEN_COMMENT, .value = aura_string_create()};
+      // tokens.data[tokens.size++] = (aura_Token_t){
+      //     .type = AURA_TOKEN_COMMENT, .value = aura_string_create()};
       while (i < str->len) {
-        aura_string_append(&tokens.data[tokens.size - 1].value, str->data[i]);
+        // aura_string_append(&tokens.data[tokens.size - 1].value,
+        // str->data[i]);
         i++;
       }
     } else if (str->data[i] == '{') {
@@ -98,8 +99,7 @@ aura_Interpreter_t *aura_interpreter_create() {
   aura_Interpreter_t *interpreter =
       (aura_Interpreter_t *)(malloc(sizeof(aura_Interpreter_t)));
   interpreter->line = aura_string_create();
-  interpreter->current = 0;
-  interpreter->line_number = 0;
+  interpreter->line_number = 1;
   for (size_t i = 0; i < MAX_MACHINES; ++i) {
     interpreter->machines[i] = NULL;
   }
@@ -117,7 +117,10 @@ void aura_interpreter_run_line(aura_Interpreter_t *interpreter,
   for (size_t i = 0; i < tokens.size; ++i) {
     aura_Token_t *token = &tokens.data[i];
     aura_token_print(token);
+    // Rewrite DFA constructor parsing.
+    // and parsing as a whole.
   }
+  interpreter->line_number++;
   aura_token_collection_destroy(&tokens);
 }
 

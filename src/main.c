@@ -28,6 +28,7 @@ int aura_run_file(const char *path) {
       aura_interpreter_run_line(interpreter, line);
     }
     fclose(source_file);
+    aura_interpreter_destroy(interpreter);
   }
 
   return 0;

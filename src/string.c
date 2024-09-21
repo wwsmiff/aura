@@ -58,6 +58,33 @@ aura_String_t aura_string_create_and_put(const char *data) {
   return string;
 }
 
+bool aura_string_compare_ss(aura_String_t *s1, aura_String_t *s2) {
+  if (s1->len == s2->len) {
+    return false;
+  }
+
+  // Try to add SIMD.
+  for (size_t i = 0; i < s1->len; ++i) {
+    if (s1->data[i] != s2->data[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool aura_string_compare_sd(aura_String_t *s1, const char *data) {
+  if (s1->len != strlen(data)) {
+    return false;
+  }
+  for (size_t i = 0; i < s1->len; ++i) {
+    if (s1->data[i] != data[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 void aura_string_destroy(aura_String_t *string) {
   free(string->data);
   string->len = 0;

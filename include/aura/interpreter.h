@@ -62,7 +62,6 @@ typedef struct {
 
 typedef struct {
   aura_String_t line;
-  char current;
   size_t line_number;
   aura_Machine_t *machines[MAX_MACHINES];
   aura_Machine_t *current_machine;
