@@ -87,5 +87,6 @@ bool aura_string_compare_sd(aura_String_t *s1, const char *data) {
 
 void aura_string_destroy(aura_String_t *string) {
   free(string->data);
+  string->data = NULL;
   string->len = 0;
 }

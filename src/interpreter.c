@@ -1,99 +1,8 @@
 #include "aura/interpreter.h"
-#include <ctype.h>
+#include "aura/set.h"
+#include "aura/token.h"
 #include <stdio.h>
 #include <stdlib.h>
-
-aura_String_t aura_handle_id(aura_String_t *str, size_t *start) {
-  aura_String_t id = aura_string_create();
-  while (!isspace(str->data[*start]) && isalpha(str->data[*start]) &&
-             (*start < str->len - 1) ||
-         isdigit(str->data[*start])) {
-    aura_string_append(&id, str->data[*start]);
-    (*start)++;
-  }
-  (*start)--;
-  return id;
-}
-
-void aura_token_print(aura_Token_t *token) {
-  printf("aura_token(type: ");
-  printf("%s, value: '", aura_token_str_table[token->type]);
-  for (size_t i = 0; i < token->value.len; ++i) {
-    printf("%c", token->value.data[i]);
-  }
-  printf("')\n");
-}
-
-aura_TokenCollection_t aura_tokenize_line(aura_String_t *str) {
-  aura_TokenCollection_t tokens;
-  tokens.size = 0;
-  tokens.data = (aura_Token_t *)(malloc(sizeof(aura_Token_t) * str->len));
-  for (size_t i = 0; i < str->len; ++i) {
-    if (str->data[i] == '#') {
-      // tokens.data[tokens.size++] = (aura_Token_t){
-      //     .type = AURA_TOKEN_COMMENT, .value = aura_string_create()};
-      while (i < str->len) {
-        // aura_string_append(&tokens.data[tokens.size - 1].value,
-        // str->data[i]);
-        i++;
-      }
-    } else if (str->data[i] == '{') {
-      tokens.data[tokens.size++] = (aura_Token_t){
-          .type = AURA_TOKEN_LBRACE, .value = aura_string_create_and_put("{")};
-    } else if (str->data[i] == '}') {
-      tokens.data[tokens.size++] = (aura_Token_t){
-          .type = AURA_TOKEN_RBRACE, .value = aura_string_create_and_put("}")};
-    } else if (str->data[i] == '=') {
-      tokens.data[tokens.size++] =
-          (aura_Token_t){.type = AURA_TOKEN_INITIALIZE,
-                         .value = aura_string_create_and_put("=")};
-    } else if (str->data[i] == ':') {
-      if ((i + 1) < str->len && str->data[i + 1] == '=') {
-        tokens.data[tokens.size++] =
-            (aura_Token_t){.type = AURA_TOKEN_DEFINE,
-                           .value = aura_string_create_and_put(":=")};
-        continue;
-      }
-    } else if (str->data[i] == '(') {
-      tokens.data[tokens.size++] = (aura_Token_t){
-          .type = AURA_TOKEN_LPAREN, .value = aura_string_create_and_put("(")};
-    } else if (str->data[i] == ')') {
-      tokens.data[tokens.size++] = (aura_Token_t){
-          .type = AURA_TOKEN_RPAREN, .value = aura_string_create_and_put(")")};
-    } else if (isalpha(str->data[i])) {
-      aura_String_t id = aura_handle_id(str, &i);
-      tokens.data[tokens.size++] =
-          (aura_Token_t){.type = AURA_TOKEN_ID, .value = id};
-    } else if (str->data[i] == '-') {
-      if ((i + 1) < str->len && str->data[i + 1] == '>') {
-        tokens.data[tokens.size++] =
-            (aura_Token_t){.type = AURA_TOKEN_PATH_CONSTRUCT,
-                           .value = aura_string_create_and_put("->")};
-        i++;
-        continue;
-      }
-    } else if (str->data[i] == ',') {
-      tokens.data[tokens.size++] = (aura_Token_t){
-          .type = AURA_TOKEN_COMMA, .value = aura_string_create_and_put(",")};
-    } else if (str->data[i] == '"' || str->data[i] == '\'') {
-      tokens.data[tokens.size++] = (aura_Token_t){
-          .type = AURA_TOKEN_QUOTE, .value = aura_string_create_and_put("'")};
-    } else if (isspace(str->data[i])) {
-      continue;
-    } else {
-      AURA_COMPILETIME_ERROR("Unexpected character: '%c'.\n", str->data[i]);
-    }
-  }
-  return tokens;
-}
-
-void aura_token_collection_destroy(aura_TokenCollection_t *token_collection) {
-  for (size_t i = 0; i < token_collection->size; ++i) {
-    aura_string_destroy(&token_collection->data[i].value);
-  }
-  free(token_collection->data);
-  token_collection->size = 0;
-}
 
 aura_Interpreter_t *aura_interpreter_create() {
   aura_Interpreter_t *interpreter =
@@ -108,6 +17,147 @@ aura_Interpreter_t *aura_interpreter_create() {
   return interpreter;
 }
 
+aura_String_Set_t aura_parse_set(aura_Interpreter_t *interpreter,
+                                 aura_TokenCollection_t *tokens, size_t *idx) {
+  aura_String_Set_t set = aura_string_set_create();
+  while (1) {
+    if (tokens->data[*idx].type == AURA_TOKEN_ID ||
+        tokens->data[*idx].type == AURA_TOKEN_STRING) {
+      aura_string_set_append_data(&set, tokens->data[*idx].value.data);
+      (*idx)++;
+      if (tokens->data[*idx].type == AURA_TOKEN_COMMA) {
+        (*idx)++;
+        continue;
+      } else if (tokens->data[*idx].type == AURA_TOKEN_RBRACE) {
+        (*idx)++;
+        break;
+      } else {
+        AURA_COMPILETIME_ERROR("Expected comma or end of set, line: %lld.\n",
+                               interpreter->line_number);
+      }
+    } else {
+      AURA_COMPILETIME_ERROR("Expected comma or end of set, line: %lld.\n",
+                             interpreter->line_number);
+    }
+  }
+  return set;
+}
+
+void aura_construct_machine(aura_Interpreter_t *interpreter, const char *id,
+                            aura_MachineType type,
+                            aura_TokenCollection_t *tokens, size_t *idx) {
+  int machine_hash = 0;
+  int len = strlen(id);
+  for (int i = 0; i < len; ++i) {
+    machine_hash += (int)(id[i]) * (i + 1);
+  }
+  machine_hash += len;
+  machine_hash %= MAX_MACHINES;
+  if (type == AURA_MACHINE_DFA) {
+    interpreter->machines[machine_hash] =
+        (aura_Machine_t *)(malloc(sizeof(aura_Machine_t *)));
+    interpreter->machines[machine_hash]->type = type;
+    interpreter->machines[machine_hash]->variant.dfa =
+        aura_DFA_Machine_create();
+    aura_DFA_Machine_t *machine =
+        interpreter->machines[machine_hash]->variant.dfa;
+    (*idx)++;
+    if ((*idx < tokens->size) && tokens->data[*idx].type == AURA_TOKEN_LPAREN) {
+      (*idx)++;
+      size_t argument = 0;
+      aura_String_Set_t set;
+      aura_String_t id = aura_string_create();
+      while (1) {
+        argument++;
+        if ((*idx < tokens->size) &&
+            tokens->data[*idx].type == AURA_TOKEN_LBRACE) {
+          (*idx)++;
+          set = aura_parse_set(interpreter, tokens, idx);
+          if (tokens->data[*idx].type == AURA_TOKEN_COMMA) {
+            (*idx)++;
+          } else if (tokens->data[*idx].type == AURA_TOKEN_ID) {
+            (*idx)++;
+          }
+        } else if ((*idx < tokens->size) &&
+                   tokens->data[*idx].type == AURA_TOKEN_ID) {
+          for (size_t i = 0; i < tokens->data[*idx].value.len; ++i) {
+            aura_string_append(&id, tokens->data[*idx].value.data[i]);
+          }
+          (*idx)++;
+        } else if ((*idx < tokens->size) &&
+                   tokens->data[*idx].type == AURA_TOKEN_RPAREN) {
+          break;
+        } else {
+          AURA_COMPILETIME_ERROR("Expected closing paranthesis, line: %lld\n",
+                                 interpreter->line_number);
+        }
+
+        if (argument == 1) {
+          if (set.len == 0) {
+            AURA_COMPILETIME_ERROR("Argument %lld must be a set, line: %lld.\n",
+                                   argument, interpreter->line_number);
+          } else {
+            for (size_t i = 0; i < set.len; ++i) {
+              set.data[i]->data[set.data[i]->len] = '\0';
+              aura_DFA_Machine_add_state(machine, set.data[i]->data);
+            }
+          }
+        } else if (argument == 2) {
+          if (set.len == 0) {
+            AURA_COMPILETIME_ERROR("Argument %lld must be a set, line: %lld.\n",
+                                   argument, interpreter->line_number);
+          } else {
+            aura_String_t input_str = aura_string_create();
+            for (size_t i = 0; i < set.len; ++i) {
+              if (set.data[i]->len > 1) {
+                AURA_COMPILETIME_ERROR(
+                    "Input must be a set of single characters, line: %lld.\n",
+                    interpreter->line_number);
+              }
+              aura_string_append(&input_str, set.data[i]->data[0]);
+            }
+            aura_DFA_Machine_set_input(machine, input_str.data);
+            aura_string_destroy(&input_str);
+          }
+        } else if (argument == 3) {
+          if (set.len == 0) {
+            AURA_COMPILETIME_ERROR("Argument %lld must be a set, line: %lld.\n",
+                                   argument, interpreter->line_number);
+          } else {
+            for (size_t i = 0; i < set.len; ++i) {
+              set.data[i]->data[set.data[i]->len] = '\0';
+              aura_state_set(
+                  aura_DFA_Machine_get_state(machine, set.data[i]->data),
+                  AURA_STATE_GENERAL | AURA_STATE_FINAL);
+            }
+          }
+        } else if (argument == 4) {
+          if (id.len == 0) {
+            AURA_COMPILETIME_ERROR(
+                "Argument %lld must be a single state, line: %lld.\n", argument,
+                interpreter->line_number);
+          } else {
+            id.data[id.len] = '\0';
+            aura_state_set(aura_DFA_Machine_get_state(machine, id.data),
+                           AURA_STATE_GENERAL | AURA_STATE_INITIAL);
+          }
+        }
+
+        aura_string_clear(&id);
+        aura_string_set_clear(&set);
+      }
+      aura_string_destroy(&id);
+      aura_string_set_destroy(&set);
+    }
+
+    for (size_t i = 0; i < MAX_MACHINES; ++i) {
+      if (machine->states[i] != NULL) {
+        aura_state_print(machine->states[i]);
+      }
+    }
+  }
+}
+
 void aura_interpreter_run_line(aura_Interpreter_t *interpreter,
                                const char *src) {
   aura_string_clear(&interpreter->line);
@@ -115,10 +165,31 @@ void aura_interpreter_run_line(aura_Interpreter_t *interpreter,
   interpreter->line.len--;
   aura_TokenCollection_t tokens = aura_tokenize_line(&interpreter->line);
   for (size_t i = 0; i < tokens.size; ++i) {
-    aura_Token_t *token = &tokens.data[i];
-    aura_token_print(token);
-    // Rewrite DFA constructor parsing.
-    // and parsing as a whole.
+    if (tokens.data[i].type == AURA_TOKEN_ID) {
+      const char *machine_id = tokens.data[i].value.data;
+      i++;
+      if (tokens.data[i].type == AURA_TOKEN_INITIALIZE) {
+        i++;
+        if (tokens.data[i].type == AURA_TOKEN_ID) {
+          aura_String_t machine_type_str =
+              aura_string_create_and_put(tokens.data[i].value.data);
+          aura_MachineType machine_type = 0;
+          if (aura_string_compare_sd(&machine_type_str, "DFA")) {
+            machine_type = AURA_MACHINE_DFA;
+          } else {
+            AURA_COMPILETIME_ERROR("Unknown machine type: '%s', line: %lld.\n",
+                                   machine_type_str.data,
+                                   interpreter->line_number);
+          }
+          aura_construct_machine(interpreter, machine_id, machine_type, &tokens,
+                                 &i);
+          aura_string_destroy(&machine_type_str);
+        } else {
+          AURA_COMPILETIME_ERROR("Expected machine type: '%s', line: %lld.\n",
+                                 interpreter->line_number);
+        }
+      }
+    }
   }
   interpreter->line_number++;
   aura_token_collection_destroy(&tokens);
