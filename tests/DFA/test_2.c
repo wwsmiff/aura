@@ -14,11 +14,11 @@ int main() {
 
   aura_DFA_Machine_set_input(dfa_machine, "01");
 
-  aura_state_set(aura_DFA_Machine_get_state(dfa_machine, "q0"),
-                 AURA_STATE_INITIAL | AURA_STATE_GENERAL);
+  aura_state_set_type(aura_DFA_Machine_get_state(dfa_machine, "q0"),
+                      AURA_STATE_INITIAL | AURA_STATE_GENERAL);
 
-  aura_state_set(aura_DFA_Machine_get_state(dfa_machine, "q2"),
-                 AURA_STATE_FINAL | AURA_STATE_GENERAL);
+  aura_state_set_type(aura_DFA_Machine_get_state(dfa_machine, "q2"),
+                      AURA_STATE_FINAL | AURA_STATE_GENERAL);
 
   aura_DFA_Machine_set_path(dfa_machine, "q0", '0', "q1");
   aura_DFA_Machine_set_path(dfa_machine, "q0", '1', "q3");

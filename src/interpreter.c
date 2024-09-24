@@ -126,7 +126,7 @@ void aura_construct_machine(aura_Interpreter_t *interpreter, const char *id,
           } else {
             for (size_t i = 0; i < set.len; ++i) {
               set.data[i]->data[set.data[i]->len] = '\0';
-              aura_state_set(
+              aura_state_set_type(
                   aura_DFA_Machine_get_state(machine, set.data[i]->data),
                   AURA_STATE_GENERAL | AURA_STATE_FINAL);
             }
@@ -138,8 +138,8 @@ void aura_construct_machine(aura_Interpreter_t *interpreter, const char *id,
                 interpreter->line_number);
           } else {
             id.data[id.len] = '\0';
-            aura_state_set(aura_DFA_Machine_get_state(machine, id.data),
-                           AURA_STATE_GENERAL | AURA_STATE_INITIAL);
+            aura_state_set_type(aura_DFA_Machine_get_state(machine, id.data),
+                                AURA_STATE_GENERAL | AURA_STATE_INITIAL);
           }
         }
 
