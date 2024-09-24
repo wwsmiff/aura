@@ -26,7 +26,7 @@
 
 #define AURA_COMPILETIME_ERROR(...)                                            \
   do {                                                                         \
-    fprintf(stderr, "Aura Compile Error: ");                                   \
+    fprintf(stderr, "Aura Compiletime Error: ");                               \
     fprintf(stderr, __VA_ARGS__);                                              \
     exit(1);                                                                   \
   } while (0);

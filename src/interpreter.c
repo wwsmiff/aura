@@ -126,9 +126,13 @@ void aura_construct_machine(aura_Interpreter_t *interpreter, const char *id,
           } else {
             for (size_t i = 0; i < set.len; ++i) {
               set.data[i]->data[set.data[i]->len] = '\0';
-              aura_state_set_type(
-                  aura_DFA_Machine_get_state(machine, set.data[i]->data),
-                  AURA_STATE_GENERAL | AURA_STATE_FINAL);
+              aura_State_t *state =
+                  aura_DFA_Machine_get_state(machine, set.data[i]->data);
+              if (state == NULL) {
+                AURA_COMPILETIME_ERROR("State '%s' is undefined.\n",
+                                       set.data[i]->data);
+              }
+              aura_state_set_type(state, AURA_STATE_GENERAL | AURA_STATE_FINAL);
             }
           }
         } else if (argument == 4) {
@@ -138,8 +142,11 @@ void aura_construct_machine(aura_Interpreter_t *interpreter, const char *id,
                 interpreter->line_number);
           } else {
             id.data[id.len] = '\0';
-            aura_state_set_type(aura_DFA_Machine_get_state(machine, id.data),
-                                AURA_STATE_GENERAL | AURA_STATE_INITIAL);
+            aura_State_t *state = aura_DFA_Machine_get_state(machine, id.data);
+            if (state == NULL) {
+              AURA_COMPILETIME_ERROR("State '%s' is undefined.\n", id.data);
+            }
+            aura_state_set_type(state, AURA_STATE_GENERAL | AURA_STATE_INITIAL);
           }
         }
 
