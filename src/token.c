@@ -37,8 +37,8 @@ void aura_token_print(aura_Token_t *token) {
   printf("')\n");
 }
 
-aura_TokenCollection_t aura_tokenize_line(aura_String_t *str) {
-  aura_TokenCollection_t tokens;
+aura_Token_Collection_t aura_tokenize_line(aura_String_t *str) {
+  aura_Token_Collection_t tokens;
   tokens.size = 0;
   tokens.data = (aura_Token_t *)(malloc(sizeof(aura_Token_t) * str->len));
   for (size_t i = 0; i < str->len; ++i) {
@@ -65,6 +65,7 @@ aura_TokenCollection_t aura_tokenize_line(aura_String_t *str) {
         tokens.data[tokens.size++] =
             (aura_Token_t){.type = AURA_TOKEN_DEFINE,
                            .value = aura_string_create_and_put(":=")};
+        i += 1;
         continue;
       }
     } else if (str->data[i] == '(') {
@@ -107,7 +108,7 @@ aura_TokenCollection_t aura_tokenize_line(aura_String_t *str) {
   return tokens;
 }
 
-void aura_token_collection_destroy(aura_TokenCollection_t *token_collection) {
+void aura_token_collection_destroy(aura_Token_Collection_t *token_collection) {
   for (size_t i = 0; i < token_collection->size; ++i) {
     aura_string_destroy(&token_collection->data[i].value);
   }

@@ -17,6 +17,7 @@ typedef enum {
   AURA_TOKEN_COMMA,
   AURA_TOKEN_QUOTE,
   AURA_TOKEN_STRING,
+  AURA_TOKEN_COLON,
 } aura_TokenType;
 
 /* clang-format off */
@@ -34,6 +35,7 @@ static const char const *aura_token_str_table[] = {
   [AURA_TOKEN_COMMA] = "token_comma",
   [AURA_TOKEN_QUOTE] = "token_quote",
   [AURA_TOKEN_STRING] = "token_string",
+  [AURA_TOKEN_COLON] = "token_colon",
 };
 
 /* clang-format off */
@@ -46,11 +48,11 @@ typedef struct {
 typedef struct {
   aura_Token_t *data;
   size_t size;
-} aura_TokenCollection_t;
+} aura_Token_Collection_t;
 
 void aura_token_print(aura_Token_t *token);
-aura_TokenCollection_t aura_tokenize_line(aura_String_t *str);
-void aura_token_collection_destroy(aura_TokenCollection_t *token_collection);
+aura_Token_Collection_t aura_tokenize_line(aura_String_t *str);
+void aura_token_collection_destroy(aura_Token_Collection_t *token_collection);
 
 
 #endif // AURA_TOKEN_H_

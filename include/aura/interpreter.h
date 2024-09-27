@@ -5,6 +5,17 @@
 #include "aura/string.h"
 
 #define MAX_MACHINES 512
+#define KEYWORDS 3
+
+/* clang-format off */
+
+static const char const *aura_reserved_keywords[] = {
+  "run",
+  "loop",
+  "DFA"
+};
+
+/* clang-format on */
 
 typedef enum { AURA_MACHINE_DFA } aura_MachineType;
 
@@ -22,6 +33,8 @@ typedef struct {
   size_t line_number;
   aura_Machine_t *machines[MAX_MACHINES];
   aura_Machine_t *current_machine;
+  bool machine_definition;
+  size_t brace_depth;
 } aura_Interpreter_t;
 
 aura_Interpreter_t *aura_interpreter_create();

@@ -16,7 +16,7 @@ void aura_state_print(aura_State_t *state) {
   for (size_t i = 0; i < state->label.len; ++i) {
     printf("%c", state->label.data[i]);
   }
-  printf(", type: {");
+  printf("', type: {");
   if (state->type & AURA_STATE_GENERAL && state->type & AURA_STATE_FINAL &&
       state->type & AURA_STATE_INITIAL) {
     printf("general, initial, final");

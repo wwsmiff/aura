@@ -57,6 +57,9 @@ void aura_string_set_append_data(aura_String_Set_t *set, const char *data) {
 }
 
 void aura_string_set_clear(aura_String_Set_t *set) {
+  for (size_t i = 0; i < set->len; ++i) {
+    aura_string_destroy(set->data[i]);
+  }
   memset(set->data, 0, set->len * sizeof(aura_String_t *));
   set->len = 0;
 }
