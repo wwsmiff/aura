@@ -23,12 +23,16 @@ int aura_run_file(const char *path) {
     return 1;
   } else {
     interpreter = aura_interpreter_create();
+    aura_String_t source = aura_string_create();
     char line[BUFFER_SIZE] = {0};
     while (fgets(line, BUFFER_SIZE, source_file) != NULL) {
-      aura_interpreter_run_line(interpreter, line);
+      aura_string_put(&source, line);
     }
+
+    aura_interpreter_run(interpreter, &source);
     fclose(source_file);
     aura_interpreter_destroy(interpreter);
+    aura_string_destroy(&source);
   }
 
   return 0;

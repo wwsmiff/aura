@@ -37,15 +37,19 @@ void aura_token_print(aura_Token_t *token) {
   printf("')\n");
 }
 
-aura_Token_Collection_t aura_tokenize_line(aura_String_t *str) {
-  aura_Token_Collection_t tokens;
+aura_Token_Array_t aura_tokenize_source(aura_String_t *str) {
+  aura_Token_Array_t tokens;
   tokens.size = 0;
   tokens.data = (aura_Token_t *)(malloc(sizeof(aura_Token_t) * str->len));
+
   for (size_t i = 0; i < str->len; ++i) {
-    if (str->data[i] == '#') {
+    if (str->data[i] == '\n' || str->data[i] == '\r') {
+      tokens.data[tokens.size++] = (aura_Token_t){
+          .type = AURA_TOKEN_EOL, .value = aura_string_create_and_put("\\n")};
+    } else if (str->data[i] == '#') {
       // tokens.data[tokens.size++] = (aura_Token_t){
       //     .type = AURA_TOKEN_COMMENT, .value = aura_string_create()};
-      while (i < str->len) {
+      while (str->data[i] != '\n' && str->data[i] != '\r') {
         // aura_string_append(&tokens.data[tokens.size - 1].value,
         // str->data[i]);
         i++;
@@ -65,7 +69,7 @@ aura_Token_Collection_t aura_tokenize_line(aura_String_t *str) {
         tokens.data[tokens.size++] =
             (aura_Token_t){.type = AURA_TOKEN_DEFINE,
                            .value = aura_string_create_and_put(":=")};
-        i += 1;
+        i++;
         continue;
       }
     } else if (str->data[i] == '(') {
@@ -76,8 +80,19 @@ aura_Token_Collection_t aura_tokenize_line(aura_String_t *str) {
           .type = AURA_TOKEN_RPAREN, .value = aura_string_create_and_put(")")};
     } else if (isalpha(str->data[i])) {
       aura_String_t id = aura_handle_id(str, &i);
-      tokens.data[tokens.size++] =
-          (aura_Token_t){.type = AURA_TOKEN_ID, .value = id};
+      bool keyword = false;
+      for (size_t j = 0; j < KEYWORDS; ++j) {
+        if (aura_string_compare_sd(&id, aura_reserved_keywords[j]) == 1) {
+          tokens.data[tokens.size++] =
+              (aura_Token_t){.type = AURA_TOKEN_KEYWORD, .value = id};
+          keyword = true;
+          break;
+        }
+      }
+      if (!keyword) {
+        tokens.data[tokens.size++] =
+            (aura_Token_t){.type = AURA_TOKEN_ID, .value = id};
+      }
     } else if (str->data[i] == '-') {
       if ((i + 1) < str->len && str->data[i + 1] == '>') {
         tokens.data[tokens.size++] =
@@ -108,7 +123,7 @@ aura_Token_Collection_t aura_tokenize_line(aura_String_t *str) {
   return tokens;
 }
 
-void aura_token_collection_destroy(aura_Token_Collection_t *token_collection) {
+void aura_token_array_destroy(aura_Token_Array_t *token_collection) {
   for (size_t i = 0; i < token_collection->size; ++i) {
     aura_string_destroy(&token_collection->data[i].value);
   }

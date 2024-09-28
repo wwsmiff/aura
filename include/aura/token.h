@@ -4,9 +4,12 @@
 #include "aura/string.h"
 #include <stdint.h>
 
+#define KEYWORDS 3
+
 typedef enum {
   AURA_TOKEN_COMMENT,
   AURA_TOKEN_ID,
+  AURA_TOKEN_KEYWORD,
   AURA_TOKEN_LBRACE,
   AURA_TOKEN_RBRACE,
   AURA_TOKEN_LPAREN,
@@ -18,6 +21,7 @@ typedef enum {
   AURA_TOKEN_QUOTE,
   AURA_TOKEN_STRING,
   AURA_TOKEN_COLON,
+  AURA_TOKEN_EOL
 } aura_TokenType;
 
 /* clang-format off */
@@ -25,6 +29,7 @@ typedef enum {
 static const char const *aura_token_str_table[] = {
   [AURA_TOKEN_COMMENT] = "token_comment",         
   [AURA_TOKEN_ID] = "token_id",         
+  [AURA_TOKEN_KEYWORD] = "token_keyword",
   [AURA_TOKEN_LBRACE] = "token_lbrace",
   [AURA_TOKEN_RBRACE] = "token_rbrace", 
   [AURA_TOKEN_LPAREN] = "token_lparen",
@@ -36,6 +41,14 @@ static const char const *aura_token_str_table[] = {
   [AURA_TOKEN_QUOTE] = "token_quote",
   [AURA_TOKEN_STRING] = "token_string",
   [AURA_TOKEN_COLON] = "token_colon",
+  [AURA_TOKEN_EOL] = "token_eol",
+};
+
+
+static const char const *aura_reserved_keywords[] = {
+  "run",
+  "loop",
+  "DFA"
 };
 
 /* clang-format off */
@@ -48,11 +61,11 @@ typedef struct {
 typedef struct {
   aura_Token_t *data;
   size_t size;
-} aura_Token_Collection_t;
+} aura_Token_Array_t;
 
 void aura_token_print(aura_Token_t *token);
-aura_Token_Collection_t aura_tokenize_line(aura_String_t *str);
-void aura_token_collection_destroy(aura_Token_Collection_t *token_collection);
+aura_Token_Array_t aura_tokenize_source(aura_String_t *str);
+void aura_token_array_destroy(aura_Token_Array_t *token_collection);
 
 
 #endif // AURA_TOKEN_H_
