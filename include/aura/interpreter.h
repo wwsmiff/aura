@@ -3,6 +3,7 @@
 
 #include "aura/dfa.h"
 #include "aura/string.h"
+#include "aura/token.h"
 
 #define MAX_MACHINES 512
 
@@ -18,6 +19,9 @@ typedef struct {
 } aura_Machine_t;
 
 typedef struct {
+  aura_Token_Array_t tokens;
+  aura_Token_t current_token;
+  size_t token_index;
   size_t line_number;
   aura_Machine_t *machines[MAX_MACHINES];
   aura_Machine_t *current_machine;

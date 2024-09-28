@@ -7,6 +7,7 @@
 #define KEYWORDS 3
 
 typedef enum {
+  AURA_TOKEN_NONE,
   AURA_TOKEN_COMMENT,
   AURA_TOKEN_ID,
   AURA_TOKEN_KEYWORD,
@@ -27,6 +28,7 @@ typedef enum {
 /* clang-format off */
 
 static const char const *aura_token_str_table[] = {
+  [AURA_TOKEN_NONE] = "token_none",
   [AURA_TOKEN_COMMENT] = "token_comment",         
   [AURA_TOKEN_ID] = "token_id",         
   [AURA_TOKEN_KEYWORD] = "token_keyword",
