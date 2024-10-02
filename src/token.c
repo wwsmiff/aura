@@ -71,6 +71,9 @@ aura_Token_Array_t aura_tokenize_source(aura_String_t *str) {
                            .value = aura_string_create_and_put(":=")};
         i++;
         continue;
+      } else {
+        tokens.data[tokens.size++] = (aura_Token_t){
+            .type = AURA_TOKEN_COLON, .value = aura_string_create_and_put(":")};
       }
     } else if (str->data[i] == '(') {
       tokens.data[tokens.size++] = (aura_Token_t){

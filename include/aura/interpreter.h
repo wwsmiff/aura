@@ -26,7 +26,6 @@ typedef struct {
   aura_Machine_t *machines[MAX_MACHINES];
   aura_Machine_t *current_machine;
   bool machine_definition;
-  size_t brace_depth;
 } aura_Interpreter_t;
 
 aura_Interpreter_t *aura_interpreter_create();
