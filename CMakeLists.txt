@@ -6,12 +6,15 @@ project(aura)
 add_executable(${PROJECT_NAME})
 set(AURA_SOURCES 
   src/string.c
+  src/token.c
   src/state.c
   src/dfa.c
+  src/set.c
 )
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/include")
 target_sources(${PROJECT_NAME} PRIVATE
   ${AURA_SOURCES}
+  src/interpreter.c
   src/main.c
 )
 

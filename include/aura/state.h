@@ -16,7 +16,7 @@ typedef struct {
 
 aura_State_t *aura_state_create(aura_StateType type, const char *label);
 void aura_state_print(aura_State_t *state);
-void aura_state_set(aura_State_t *state, aura_StateType type);
+void aura_state_set_type(aura_State_t *state, aura_StateType type);
 void aura_state_destroy(aura_State_t *state);
 
 #endif // AURA_STATE_H_

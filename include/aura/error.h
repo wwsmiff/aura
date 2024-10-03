@@ -3,16 +3,16 @@
 
 #include "aura/state.h"
 
-#define AURA_REPORT_ERRORS 1
-#define AURA_EXIT_ON_ERROR 1
+#define AURA_REPORT_RUTIME_ERRORS 1
+#define AURA_EXIT_ON_RUTIME_ERROR 1
 
-#if AURA_EXIT_ON_ERROR == 1
+#if AURA_EXIT_ON_RUTIME_ERROR == 1
 #define AURA_EXIT(x) exit(x);
 #else
 #define AURA_EXIT(x)
 #endif
 
-#if AURA_REPORT_ERRORS == 1
+#if AURA_REPORT_RUTIME_ERRORS == 1
 #define AURA_RUNTIME_ERROR(...)                                                \
   do {                                                                         \
     fprintf(stderr, "Aura Runtime Error: ");                                   \
@@ -23,6 +23,13 @@
 #else
 #define AURA_RUNTIME_ERROR(...)
 #endif
+
+#define AURA_COMPILETIME_ERROR(...)                                            \
+  do {                                                                         \
+    fprintf(stderr, "Aura Compiletime Error: ");                               \
+    fprintf(stderr, __VA_ARGS__);                                              \
+    exit(1);                                                                   \
+  } while (0);
 
 typedef enum {
   AURA_RUNTIME_ERROR_NONE,
