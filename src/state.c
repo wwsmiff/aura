@@ -36,7 +36,7 @@ void aura_state_print(aura_State_t *state) {
 }
 
 void aura_state_set_type(aura_State_t *state, aura_StateType type) {
-  state->type = type;
+  state->type |= type;
 }
 
 void aura_state_destroy(aura_State_t *state) {

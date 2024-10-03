@@ -49,11 +49,12 @@ aura_Token_Array_t aura_tokenize_source(aura_String_t *str) {
     } else if (str->data[i] == '#') {
       // tokens.data[tokens.size++] = (aura_Token_t){
       //     .type = AURA_TOKEN_COMMENT, .value = aura_string_create()};
-      while (str->data[i] != '\n' && str->data[i] != '\r') {
+      while (str->data[i + 1] != '\n' && str->data[i + 1] != '\r') {
         // aura_string_append(&tokens.data[tokens.size - 1].value,
         // str->data[i]);
         i++;
       }
+      continue;
     } else if (str->data[i] == '{') {
       tokens.data[tokens.size++] = (aura_Token_t){
           .type = AURA_TOKEN_LBRACE, .value = aura_string_create_and_put("{")};

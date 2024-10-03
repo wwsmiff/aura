@@ -13,5 +13,5 @@ machine1 := {
   q3: {'a', 'b'} -> q3
 }
 
-run(machine1, 'aabba')
-run(machine1, 'aabb')
+run(machine1, 'aabba') # should not be accepted.
+run(machine1, 'aabb') # should be accepted.

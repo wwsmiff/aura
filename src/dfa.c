@@ -40,11 +40,10 @@ void aura_DFA_Machine_set_path(aura_DFA_Machine_t *machine, const char *src,
                                char trigger, const char *dest) {
 
   if (machine->path_len != machine->input.len * machine->active_states) {
-    machine->path_len = machine->input.len * machine->active_states;
+    machine->path_len = machine->input.len * (machine->active_states + 1);
     machine->paths = (aura_State_t **)(realloc(
         machine->paths, sizeof(aura_State_t *) * machine->path_len));
   }
-
   int path_hash = 0;
   int len = strlen(src);
   for (int i = 0; i < len; ++i) {
@@ -107,9 +106,9 @@ aura_RuntimeErrorType aura_DFA_Machine_run(aura_DFA_Machine_t *machine,
 
   for (int i = 0; i < len; ++i) {
     const char *src = machine->current_state->label.data;
-
     aura_State_t *next_state =
         aura_DFA_Machine_get_path(machine, src, input[i]);
+
     if (next_state != NULL) {
       machine->current_state = next_state;
     }
