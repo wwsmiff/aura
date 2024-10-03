@@ -174,6 +174,9 @@ void aura_define_machine(aura_Interpreter_t *interpreter, aura_String_t id) {
           state_label.data[state_label.len] = '\0';
           dest.data[dest.len] = '\0';
           for (int i = 0; i < set.len; ++i) {
+            // aura_string_print(&state_label);
+            // printf("%c\n", set.data[i]->data[0]);
+            // aura_string_print(&dest);
             aura_DFA_Machine_set_path(interpreter->current_machine->variant.dfa,
                                       state_label.data, set.data[i]->data[0],
                                       dest.data);
