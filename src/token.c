@@ -42,10 +42,15 @@ aura_Token_Array_t aura_tokenize_source(aura_String_t *str) {
   tokens.size = 0;
   tokens.data = (aura_Token_t *)(malloc(sizeof(aura_Token_t) * str->len));
 
-  for (size_t i = 0; i < str->len; ++i) {
+  size_t line = 1;
+  size_t line_idx = 0;
+
+  for (size_t i = 0; i < str->len; ++i, line_idx++) {
     if (str->data[i] == '\n' || str->data[i] == '\r') {
       tokens.data[tokens.size++] = (aura_Token_t){
           .type = AURA_TOKEN_EOL, .value = aura_string_create_and_put("\\n")};
+      line++;
+      line_idx = 0;
     } else if (str->data[i] == '#') {
       // tokens.data[tokens.size++] = (aura_Token_t){
       //     .type = AURA_TOKEN_COMMENT, .value = aura_string_create()};
@@ -56,63 +61,112 @@ aura_Token_Array_t aura_tokenize_source(aura_String_t *str) {
       }
       continue;
     } else if (str->data[i] == '{') {
-      tokens.data[tokens.size++] = (aura_Token_t){
-          .type = AURA_TOKEN_LBRACE, .value = aura_string_create_and_put("{")};
+      tokens.data[tokens.size++] =
+          (aura_Token_t){.type = AURA_TOKEN_LBRACE,
+                         .value = aura_string_create_and_put("{"),
+                         .line = line,
+                         .start = line_idx,
+                         .end = line_idx};
+
     } else if (str->data[i] == '}') {
-      tokens.data[tokens.size++] = (aura_Token_t){
-          .type = AURA_TOKEN_RBRACE, .value = aura_string_create_and_put("}")};
+      tokens.data[tokens.size++] =
+          (aura_Token_t){.type = AURA_TOKEN_RBRACE,
+                         .value = aura_string_create_and_put("}"),
+                         .line = line,
+                         .start = line_idx,
+                         .end = line_idx};
     } else if (str->data[i] == '=') {
       tokens.data[tokens.size++] =
           (aura_Token_t){.type = AURA_TOKEN_INITIALIZE,
-                         .value = aura_string_create_and_put("=")};
+                         .value = aura_string_create_and_put("="),
+                         .line = line,
+                         .start = line_idx,
+                         .end = line_idx};
     } else if (str->data[i] == ':') {
       if ((i + 1) < str->len && str->data[i + 1] == '=') {
         tokens.data[tokens.size++] =
             (aura_Token_t){.type = AURA_TOKEN_DEFINE,
-                           .value = aura_string_create_and_put(":=")};
+                           .value = aura_string_create_and_put(":="),
+                           .line = line,
+                           .start = line_idx,
+                           .end = line_idx + 1};
         i++;
         continue;
       } else {
-        tokens.data[tokens.size++] = (aura_Token_t){
-            .type = AURA_TOKEN_COLON, .value = aura_string_create_and_put(":")};
+        tokens.data[tokens.size++] =
+            (aura_Token_t){.type = AURA_TOKEN_COLON,
+                           .value = aura_string_create_and_put(":"),
+                           .line = line,
+                           .start = line_idx,
+                           .end = line_idx + 1};
       }
     } else if (str->data[i] == '(') {
-      tokens.data[tokens.size++] = (aura_Token_t){
-          .type = AURA_TOKEN_LPAREN, .value = aura_string_create_and_put("(")};
+      tokens.data[tokens.size++] =
+          (aura_Token_t){.type = AURA_TOKEN_LPAREN,
+                         .value = aura_string_create_and_put("("),
+                         .line = line,
+                         .start = line_idx,
+                         .end = line_idx + 1};
     } else if (str->data[i] == ')') {
-      tokens.data[tokens.size++] = (aura_Token_t){
-          .type = AURA_TOKEN_RPAREN, .value = aura_string_create_and_put(")")};
+      tokens.data[tokens.size++] =
+          (aura_Token_t){.type = AURA_TOKEN_RPAREN,
+                         .value = aura_string_create_and_put(")"),
+                         .line = line,
+                         .start = line_idx,
+                         .end = line_idx + 1};
     } else if (isalpha(str->data[i])) {
+      size_t start = i;
       aura_String_t id = aura_handle_id(str, &i);
       bool keyword = false;
       for (size_t j = 0; j < KEYWORDS; ++j) {
         if (aura_string_compare_sd(&id, aura_reserved_keywords[j]) == 1) {
           tokens.data[tokens.size++] =
-              (aura_Token_t){.type = AURA_TOKEN_KEYWORD, .value = id};
+              (aura_Token_t){.type = AURA_TOKEN_KEYWORD,
+                             .value = id,
+                             .line = line,
+                             .start = line_idx,
+                             .end = line_idx + (i - start)};
+          line_idx += (i - start);
           keyword = true;
           break;
         }
       }
       if (!keyword) {
         tokens.data[tokens.size++] =
-            (aura_Token_t){.type = AURA_TOKEN_ID, .value = id};
+            (aura_Token_t){.type = AURA_TOKEN_ID,
+                           .value = id,
+                           .line = line,
+                           .start = line_idx,
+                           .end = line_idx + (i - start)};
+        line_idx += (i - start);
       }
     } else if (str->data[i] == '-') {
       if ((i + 1) < str->len && str->data[i + 1] == '>') {
         tokens.data[tokens.size++] =
             (aura_Token_t){.type = AURA_TOKEN_PATH_CONSTRUCT,
-                           .value = aura_string_create_and_put("->")};
+                           .value = aura_string_create_and_put("->"),
+                           .line = line,
+                           .start = line_idx,
+                           .end = line_idx + 1};
         i++;
         continue;
       }
     } else if (str->data[i] == ',') {
-      tokens.data[tokens.size++] = (aura_Token_t){
-          .type = AURA_TOKEN_COMMA, .value = aura_string_create_and_put(",")};
+      tokens.data[tokens.size++] =
+          (aura_Token_t){.type = AURA_TOKEN_COMMA,
+                         .value = aura_string_create_and_put(","),
+                         .line = line,
+                         .start = line_idx,
+                         .end = line_idx};
     } else if (str->data[i] == '\'') {
+      size_t start = i;
       i++;
       aura_String_t string_literal = aura_handle_string(str, &i);
-      tokens.data[tokens.size++] = (aura_Token_t){
-          .type = AURA_TOKEN_STRING, .value = aura_string_create()};
+      tokens.data[tokens.size++] = (aura_Token_t){.type = AURA_TOKEN_STRING,
+                                                  .value = aura_string_create(),
+                                                  .line = line,
+                                                  .start = line_idx,
+                                                  .end = line_idx};
       aura_Token_t *token = &tokens.data[tokens.size - 1];
       for (size_t i = 0; i < string_literal.len; ++i) {
         aura_string_append(&token->value, string_literal.data[i]);

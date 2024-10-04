@@ -1,7 +1,8 @@
 # This is a DFA to accept inputs for 0^n where n is even.
 
 machine1 = DFA({q0, q1}, {'0'}, {q0}, q0)
-machine1 := {
+
+machine1 :=  {
   q0: {'0'} -> q1
   q1: {'0'} -> q0
 }

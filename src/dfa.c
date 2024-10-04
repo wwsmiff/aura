@@ -51,7 +51,11 @@ void aura_DFA_Machine_set_path(aura_DFA_Machine_t *machine, const char *src,
   }
   path_hash += (int)(trigger);
   path_hash %= (machine->path_len);
-  machine->paths[path_hash] = aura_DFA_Machine_get_state(machine, dest);
+  if (aura_DFA_Machine_get_state(machine, dest) == NULL) {
+    AURA_RUNTIME_ERROR("Unknown state '%s'.\n", dest);
+  } else {
+    machine->paths[path_hash] = aura_DFA_Machine_get_state(machine, dest);
+  }
 }
 
 aura_State_t *aura_DFA_Machine_get_path(aura_DFA_Machine_t *machine,

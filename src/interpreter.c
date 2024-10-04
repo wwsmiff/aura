@@ -4,16 +4,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define AURA_INTERPRETER_ERROR(interpreter, ...)                               \
+  do {                                                                         \
+    interpreter->source.data[interpreter->current_token.line - 1]              \
+        ->data[interpreter->source.data[interpreter->current_token.line - 1]   \
+                   ->len] = '\0';                                              \
+    fprintf(                                                                   \
+        stderr, "%lld | %s\n", interpreter->current_token.line,                \
+        interpreter->source.data[interpreter->current_token.line - 1]->data);  \
+                                                                               \
+    fprintf(stderr, "Aura Compiletime Error: ");                               \
+    fprintf(stderr, __VA_ARGS__);                                              \
+    exit(1);                                                                   \
+  } while (0);
+
 aura_Interpreter_t *aura_interpreter_create() {
   aura_Interpreter_t *interpreter =
       (aura_Interpreter_t *)(malloc(sizeof(aura_Interpreter_t)));
-  interpreter->line_number = 1;
   for (size_t i = 0; i < MAX_MACHINES; ++i) {
     interpreter->machines[i] = NULL;
   }
   interpreter->current_machine = NULL;
-  interpreter->machine_definition = false;
   interpreter->token_index = 0;
+
+  interpreter->source = aura_string_set_create();
 
   return interpreter;
 }
@@ -39,8 +53,9 @@ void aura_interpreter_eat(aura_Interpreter_t *interpreter,
   if (aura_interpreter_peek(interpreter, 1).type == type) {
     aura_interpreter_consume(interpreter, 1);
   } else {
-    AURA_COMPILETIME_ERROR(
-        "Expected token type '%s' but got '%s'.\n", aura_token_str_table[type],
+    AURA_INTERPRETER_ERROR(
+        interpreter, "Expected token type '%s' but got '%s'.\n",
+        aura_token_str_table[type],
         aura_token_str_table[aura_interpreter_peek(interpreter, 1).type]);
   }
 }
@@ -48,7 +63,7 @@ void aura_interpreter_eat(aura_Interpreter_t *interpreter,
 aura_String_Set_t aura_interpreter_parse_set(aura_Interpreter_t *interpreter) {
   aura_interpreter_consume(interpreter, 1);
   aura_String_Set_t set = aura_string_set_create();
-  while (interpreter->current_token.type != AURA_TOKEN_NONE) {
+  while (1) {
     // aura_token_print(&interpreter->current_token);
     if (interpreter->current_token.type == AURA_TOKEN_ID ||
         interpreter->current_token.type == AURA_TOKEN_STRING) {
@@ -58,6 +73,10 @@ aura_String_Set_t aura_interpreter_parse_set(aura_Interpreter_t *interpreter) {
       aura_interpreter_consume(interpreter, 1);
     } else if (interpreter->current_token.type == AURA_TOKEN_RBRACE) {
       break;
+    } else if (interpreter->current_token.type == AURA_TOKEN_RPAREN ||
+               interpreter->current_token.type == AURA_TOKEN_EOL ||
+               interpreter->current_token.type == AURA_TOKEN_LBRACE) {
+      AURA_INTERPRETER_ERROR(interpreter, "Expected end of set.\n");
     }
   }
   return set;
@@ -92,20 +111,31 @@ void aura_interpreter_parse_constructor(aura_Interpreter_t *interpreter) {
       aura_String_Set_t set = aura_interpreter_parse_set(interpreter);
       for (size_t i = 0; i < set.len; ++i) {
         set.data[i]->data[set.data[i]->len] = '\0';
-        aura_state_set_type(
-            aura_DFA_Machine_get_state(
-                interpreter->current_machine->variant.dfa, set.data[i]->data),
-            AURA_STATE_GENERAL | AURA_STATE_FINAL);
+        aura_State_t *state = aura_DFA_Machine_get_state(
+            interpreter->current_machine->variant.dfa, set.data[i]->data);
+        if (state == NULL) {
+          AURA_INTERPRETER_ERROR(interpreter, "Unknown state: '%s'.\n",
+                                 set.data[i]->data);
+        } else {
+          aura_state_set_type(state, AURA_STATE_GENERAL | AURA_STATE_FINAL);
+        }
       }
       aura_string_set_destroy(&set);
     } else if (argc == 3) {
       aura_interpreter_eat(interpreter, AURA_TOKEN_ID);
       interpreter->current_token.value
           .data[interpreter->current_token.value.len] = '\0';
-      aura_state_set_type(
+
+      aura_State_t *state =
           aura_DFA_Machine_get_state(interpreter->current_machine->variant.dfa,
-                                     interpreter->current_token.value.data),
-          AURA_STATE_GENERAL | AURA_STATE_INITIAL);
+                                     interpreter->current_token.value.data);
+      if (state == NULL) {
+        state->label.data[state->label.len] = '\0';
+        AURA_INTERPRETER_ERROR(interpreter, "Unknown state: '%s'.\n",
+                               state->label.data);
+      } else {
+        aura_state_set_type(state, AURA_STATE_GENERAL | AURA_STATE_INITIAL);
+      }
     }
     if (aura_interpreter_peek(interpreter, 1).type == AURA_TOKEN_RPAREN) {
       break;
@@ -146,7 +176,8 @@ void aura_define_machine(aura_Interpreter_t *interpreter, aura_String_t id) {
 
   if (interpreter->current_machine == NULL) {
     id.data[id.len] = '\0';
-    AURA_COMPILETIME_ERROR("Machine '%s' does not exist.\n", id.data);
+    AURA_INTERPRETER_ERROR(interpreter, "Machine '%s' does not exist.\n",
+                           id.data);
   } else {
     int depth = 1;
     do {
@@ -192,13 +223,24 @@ void aura_define_machine(aura_Interpreter_t *interpreter, aura_String_t id) {
 
 void aura_interpreter_run(aura_Interpreter_t *interpreter,
                           aura_String_t *string) {
-#define CURRENT_TOKEN (interpreter->current_token)
+  aura_String_t line = aura_string_create();
 
+  for (size_t i = 0; i < string->len; ++i) {
+    if (string->data[i] == '\n' || string->data[i] == '\r') {
+      aura_string_set_append_string(&interpreter->source, &line);
+      aura_string_clear(&line);
+    } else {
+      aura_string_append(&line, string->data[i]);
+    }
+  }
+
+  aura_string_destroy(&line);
+
+#define CURRENT_TOKEN (interpreter->current_token)
   interpreter->tokens = aura_tokenize_source(string);
   CURRENT_TOKEN = interpreter->tokens.data[0];
   while (CURRENT_TOKEN.type != AURA_TOKEN_NONE) {
     if (CURRENT_TOKEN.type == AURA_TOKEN_EOL) {
-      interpreter->line_number++;
       aura_interpreter_consume(interpreter, 1);
     } else if (CURRENT_TOKEN.type == AURA_TOKEN_ID) {
       aura_String_t machine_id = CURRENT_TOKEN.value;
@@ -213,7 +255,7 @@ void aura_interpreter_run(aura_Interpreter_t *interpreter,
           aura_interpreter_consume(interpreter, 1);
         } else {
           machine_type.data[machine_type.len] = '\0';
-          AURA_COMPILETIME_ERROR("Unknown machine type '%s'",
+          AURA_INTERPRETER_ERROR(interpreter, "Unknown machine type '%s'",
                                  machine_type.data);
         }
       } else if (CURRENT_TOKEN.type == AURA_TOKEN_DEFINE) {
@@ -237,7 +279,8 @@ void aura_interpreter_run(aura_Interpreter_t *interpreter,
         interpreter->current_machine = interpreter->machines[machine_hash];
         if (interpreter->current_machine == NULL) {
           machine_id.data[machine_id.len] = '\0';
-          AURA_COMPILETIME_ERROR("Unknown machine '%s'.", machine_id);
+          AURA_INTERPRETER_ERROR(interpreter, "Unknown machine '%s'.",
+                                 machine_id);
         } else {
           aura_interpreter_eat(interpreter, AURA_TOKEN_COMMA);
           aura_interpreter_eat(interpreter, AURA_TOKEN_STRING);
@@ -258,6 +301,7 @@ void aura_interpreter_run(aura_Interpreter_t *interpreter,
 
 void aura_interpreter_destroy(aura_Interpreter_t *interpreter) {
   aura_token_array_destroy(&interpreter->tokens);
+  aura_string_set_destroy(&interpreter->source);
   for (size_t i = 0; i < MAX_MACHINES; ++i) {
     if (interpreter->machines[i] != NULL) {
       if (interpreter->machines[i]->type == AURA_MACHINE_DFA) {
