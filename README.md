@@ -28,6 +28,8 @@ machine1 := {
 }
 
 
+run(machine1, 'ab') # should be accepeted.
+run(machine1, 'baba') # should not be accepted.
 run(machine1, 'aabba') # should not be accepted.
 run(machine1, 'aabb') # should be accepted.
 ```
