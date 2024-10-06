@@ -1,5 +1,5 @@
 # Aura
-This is a simple interpreter and framework for finite automatas. It includes and interpreter which can construct and define different kinds of machines (currently only one kind!)
+This is a simple interpreter and framework for finite automatas. It includes an interpreter which can construct and define different kinds of machines (currently only one kind!)
 and run tests on them.
 
 ## Documentation
