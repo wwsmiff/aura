@@ -34,7 +34,9 @@ void aura_token_print(aura_Token_t *token) {
   for (size_t i = 0; i < token->value.len; ++i) {
     printf("%c", token->value.data[i]);
   }
-  printf("')\n");
+  printf("', line: %lld, start: %lld, end: %lld", token->line, token->start,
+         token->end);
+  printf(")\n");
 }
 
 aura_Token_Array_t aura_tokenize_source(aura_String_t *str) {
@@ -45,10 +47,14 @@ aura_Token_Array_t aura_tokenize_source(aura_String_t *str) {
   size_t line = 1;
   size_t line_idx = 0;
 
-  for (size_t i = 0; i < str->len; ++i, line_idx++) {
+  for (size_t i = 0; i < str->len; ++i, ++line_idx) {
     if (str->data[i] == '\n' || str->data[i] == '\r') {
-      tokens.data[tokens.size++] = (aura_Token_t){
-          .type = AURA_TOKEN_EOL, .value = aura_string_create_and_put("\\n")};
+      tokens.data[tokens.size++] =
+          (aura_Token_t){.type = AURA_TOKEN_EOL,
+                         .value = aura_string_create_and_put("\\n"),
+                         .line = line,
+                         .start = line_idx,
+                         .end = line_idx};
       line++;
       line_idx = 0;
     } else if (str->data[i] == '#') {
@@ -58,6 +64,7 @@ aura_Token_Array_t aura_tokenize_source(aura_String_t *str) {
         // aura_string_append(&tokens.data[tokens.size - 1].value,
         // str->data[i]);
         i++;
+        line_idx++;
       }
       continue;
     } else if (str->data[i] == '{') {
@@ -91,6 +98,7 @@ aura_Token_Array_t aura_tokenize_source(aura_String_t *str) {
                            .start = line_idx,
                            .end = line_idx + 1};
         i++;
+        line_idx++;
         continue;
       } else {
         tokens.data[tokens.size++] =
@@ -149,7 +157,10 @@ aura_Token_Array_t aura_tokenize_source(aura_String_t *str) {
                            .start = line_idx,
                            .end = line_idx + 1};
         i++;
+        line_idx++;
         continue;
+      } else {
+        AURA_COMPILETIME_ERROR("Unknown token.\n");
       }
     } else if (str->data[i] == ',') {
       tokens.data[tokens.size++] =
@@ -162,16 +173,18 @@ aura_Token_Array_t aura_tokenize_source(aura_String_t *str) {
       size_t start = i;
       i++;
       aura_String_t string_literal = aura_handle_string(str, &i);
-      tokens.data[tokens.size++] = (aura_Token_t){.type = AURA_TOKEN_STRING,
-                                                  .value = aura_string_create(),
-                                                  .line = line,
-                                                  .start = line_idx,
-                                                  .end = line_idx};
+      tokens.data[tokens.size++] =
+          (aura_Token_t){.type = AURA_TOKEN_STRING,
+                         .value = aura_string_create(),
+                         .line = line,
+                         .start = line_idx,
+                         .end = line_idx + (i - start)};
       aura_Token_t *token = &tokens.data[tokens.size - 1];
       for (size_t i = 0; i < string_literal.len; ++i) {
         aura_string_append(&token->value, string_literal.data[i]);
       }
       aura_string_destroy(&string_literal);
+      line_idx += (i - start);
     } else if (isspace(str->data[i])) {
       continue;
     } else {
