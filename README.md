@@ -37,7 +37,7 @@ run(machine1, 'aabb') # should be accepted.
 - `machine = DFA(...)` - declare a DFA machine. The DFA constructor takes in the set of states, set of inputs, set of final states and one initial state.
 - `machine := {...}` - define transitions for each state within the machine.
 - `run(machine, ...)` - run tests on the machine with the input defined for the machine.
-- `state: {...} -> state, {...} -> state` - define transitions for a given state within the machine.
+- `state: {...} -> state` - define transitions for a given state within the machine.
 - `# ...` - for comments.
 - `state: loop` - define a self loop for a given state across all inputs using the `loop` keyword.
 
