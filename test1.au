@@ -10,8 +10,9 @@ machine1 := {
   q0: {'a'} -> q1, {'b'} -> q3
   q1: {'a'} -> q1, {'b'} -> q2
   q2: {'a'} -> q0, {'b'} -> q2
-  q3: {'a', 'b'} -> q3
+  q3: loop
 }
+
 
 run(machine1, 'aabba') # should not be accepted.
 run(machine1, 'aabb') # should be accepted.

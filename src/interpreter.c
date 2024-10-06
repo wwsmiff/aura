@@ -212,8 +212,29 @@ void aura_define_machine(aura_Interpreter_t *interpreter, aura_String_t id) {
           if (aura_interpreter_peek(interpreter, 1).type == AURA_TOKEN_COLON) {
             state_label = interpreter->current_token.value;
             aura_interpreter_consume(interpreter, 1);
-            aura_interpreter_eat(interpreter, AURA_TOKEN_LBRACE,
-                                 "Expected set of inputs.\n");
+            if (aura_interpreter_peek(interpreter, 1).type ==
+                AURA_TOKEN_KEYWORD) {
+              aura_interpreter_consume(interpreter, 1);
+              if (aura_string_compare_sd(&interpreter->current_token.value,
+                                         "loop") == 1) {
+                state_label.data[state_label.len] = '\0';
+                for (size_t i = 0;
+                     i < interpreter->current_machine->variant.dfa->input.len;
+                     ++i) {
+                  aura_DFA_Machine_set_path(
+                      interpreter->current_machine->variant.dfa,
+                      state_label.data,
+                      interpreter->current_machine->variant.dfa->input.data[i],
+                      state_label.data);
+                }
+                aura_interpreter_consume(interpreter, 1);
+              } else {
+                AURA_INTERPRETER_ERROR(interpreter, 0, "Unexpected keyword.\n");
+              }
+            } else {
+              aura_interpreter_eat(interpreter, AURA_TOKEN_LBRACE,
+                                   "Expected set of inputs.\n");
+            }
           }
         } else if (interpreter->current_token.type == AURA_TOKEN_LBRACE) {
           depth++;
@@ -239,7 +260,6 @@ void aura_define_machine(aura_Interpreter_t *interpreter, aura_String_t id) {
       } while (interpreter->current_token.type != AURA_TOKEN_EOL);
       aura_interpreter_consume(interpreter, 1);
     } while (depth != 0);
-    aura_token_print(&interpreter->current_token);
   }
 }
 
@@ -290,6 +310,8 @@ void aura_interpreter_run(aura_Interpreter_t *interpreter,
         aura_interpreter_consume(interpreter, 1);
         aura_define_machine(interpreter, machine_id);
         aura_interpreter_consume(interpreter, 1);
+      } else {
+        AURA_INTERPRETER_ERROR(interpreter, 0, "Unknown operator.\n");
       }
     } else if (CURRENT_TOKEN.type == AURA_TOKEN_KEYWORD) {
       if (aura_string_compare_sd(&CURRENT_TOKEN.value, "run")) {
