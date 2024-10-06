@@ -12,9 +12,9 @@ and run tests on them.
 #### Syntax:
 Example (test1.au):
 ```
-# Simple test to define a DFA which accepts inputs {'a', 'b'} but is accepeted
-# only if the string ends with starts with at least one 'a' and ends with 'b'.
-# eg. ab, aaaaabbb
+# Simple test to define a DFA which takes inputs consisting of {'a', 'b'}
+# but accepts the input only if the string ends with starts with at least
+# one 'a' and ends with 'b'. eg. 'ab', 'aaaaabbb'
 
 # DFA(set of states, set of inputs, set of final states, initial state) 
 
