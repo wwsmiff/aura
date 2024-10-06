@@ -57,7 +57,10 @@ static const char const *aura_reserved_keywords[] = {
 
 typedef struct {
   aura_TokenType type;
-  aura_String_t value; 
+  aura_String_t value;
+  size_t line;
+  size_t start;
+  size_t end;
 } aura_Token_t;
 
 typedef struct {

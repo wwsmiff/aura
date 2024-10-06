@@ -2,6 +2,7 @@
 #define AURA_INTERPRETER_H_
 
 #include "aura/dfa.h"
+#include "aura/set.h"
 #include "aura/string.h"
 #include "aura/token.h"
 
@@ -22,10 +23,9 @@ typedef struct {
   aura_Token_Array_t tokens;
   aura_Token_t current_token;
   size_t token_index;
-  size_t line_number;
   aura_Machine_t *machines[MAX_MACHINES];
   aura_Machine_t *current_machine;
-  bool machine_definition;
+  aura_String_Set_t source;
 } aura_Interpreter_t;
 
 aura_Interpreter_t *aura_interpreter_create();
