@@ -233,7 +233,7 @@ void aura_define_machine(aura_Interpreter_t *interpreter, aura_String_t id) {
               }
             } else {
               aura_interpreter_eat(interpreter, AURA_TOKEN_LBRACE,
-                                   "Expected set of inputs.\n");
+                                   "Expected expression.\n");
             }
           }
         } else if (interpreter->current_token.type == AURA_TOKEN_LBRACE) {
@@ -259,6 +259,18 @@ void aura_define_machine(aura_Interpreter_t *interpreter, aura_String_t id) {
         }
       } while (interpreter->current_token.type != AURA_TOKEN_EOL);
       aura_interpreter_consume(interpreter, 1);
+      if (depth == 1) {
+        if (interpreter->current_token.type == AURA_TOKEN_RBRACE ||
+            interpreter->current_token.type == AURA_TOKEN_ID ||
+            interpreter->current_token.type == AURA_TOKEN_EOL) {
+          if (interpreter->current_token.type == AURA_TOKEN_RBRACE) {
+            depth--;
+          }
+        } else {
+          AURA_INTERPRETER_ERROR(interpreter, 0,
+                                 "Expected end of machine definition.\n");
+        }
+      }
     } while (depth != 0);
   }
 }
