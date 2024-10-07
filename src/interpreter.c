@@ -265,6 +265,7 @@ void aura_define_machine(aura_Interpreter_t *interpreter, aura_String_t id) {
             interpreter->current_token.type == AURA_TOKEN_EOL) {
           if (interpreter->current_token.type == AURA_TOKEN_RBRACE) {
             depth--;
+            aura_interpreter_consume(interpreter, 1);
           }
         } else {
           AURA_INTERPRETER_ERROR(interpreter, 0,
