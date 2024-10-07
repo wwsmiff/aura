@@ -8,7 +8,7 @@ aura_String_t aura_handle_id(aura_String_t *str, size_t *start) {
   aura_String_t id = aura_string_create();
   while (!isspace(str->data[*start]) && isalpha(str->data[*start]) &&
              (*start < str->len - 1) ||
-         isdigit(str->data[*start])) {
+         isdigit(str->data[*start]) || str->data[*start] == '_') {
     aura_string_append(&id, str->data[*start]);
     (*start)++;
   }
