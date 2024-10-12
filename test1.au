@@ -10,7 +10,7 @@ machine1 := {
   q0: {'a'} -> q1, {'b'} -> q3
   q1: {'a'} -> q1, {'b'} -> q2
   q2: {'a'} -> q0, {'b'} -> q2
-  q3: loop
+  q3: loop 
 }
 
 run(machine1, 'ab') # should be accepeted.

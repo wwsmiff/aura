@@ -191,7 +191,6 @@ void aura_construct_machine(aura_Interpreter_t *interpreter, aura_String_t id,
 }
 
 void aura_define_machine(aura_Interpreter_t *interpreter) {
-
   int depth = 1;
   do {
     aura_String_t state_label;
@@ -242,6 +241,7 @@ void aura_define_machine(aura_Interpreter_t *interpreter) {
                                     state_label.data, set.data[i]->data[0],
                                     dest.data);
         }
+        aura_string_set_destroy(&set);
       } else if (interpreter->current_token.type == AURA_TOKEN_COMMA) {
         aura_interpreter_consume(interpreter, 1);
       }
@@ -374,6 +374,8 @@ void aura_interpreter_destroy(aura_Interpreter_t *interpreter) {
     if (interpreter->machines[i] != NULL) {
       if (interpreter->machines[i]->type == AURA_MACHINE_DFA) {
         aura_DFA_Machine_destroy(interpreter->machines[i]->variant.dfa);
+        free(interpreter->machines[i]);
+        interpreter->machines[i] = NULL;
       }
     }
   }
