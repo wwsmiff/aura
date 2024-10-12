@@ -192,11 +192,11 @@ void aura_construct_machine(aura_Interpreter_t *interpreter, aura_String_t id,
 
 void aura_define_machine(aura_Interpreter_t *interpreter) {
   int depth = 1;
-  do {
+  while (depth != 0) {
     aura_String_t state_label;
     aura_String_t dest;
     aura_String_Set_t set;
-    do {
+    while (interpreter->current_token.type != AURA_TOKEN_EOL) {
       if (interpreter->current_token.type == AURA_TOKEN_ID) {
         if (aura_interpreter_peek(interpreter, 1).type == AURA_TOKEN_COLON) {
           state_label = interpreter->current_token.value;
@@ -245,7 +245,7 @@ void aura_define_machine(aura_Interpreter_t *interpreter) {
       } else if (interpreter->current_token.type == AURA_TOKEN_COMMA) {
         aura_interpreter_consume(interpreter, 1);
       }
-    } while (interpreter->current_token.type != AURA_TOKEN_EOL);
+    }
     aura_interpreter_consume(interpreter, 1);
     if (depth == 1) {
       if (interpreter->current_token.type == AURA_TOKEN_RBRACE ||
@@ -260,7 +260,7 @@ void aura_define_machine(aura_Interpreter_t *interpreter) {
                                "Expected end of machine definition.\n");
       }
     }
-  } while (depth != 0);
+  }
 }
 
 void aura_interpreter_run(aura_Interpreter_t *interpreter,
