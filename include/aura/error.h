@@ -1,7 +1,7 @@
 #ifndef AURA_ERROR_H_
 #define AURA_ERROR_H_
 
-#include "aura/state.h"
+#include <stdio.h>
 
 #define AURA_REPORT_RUTIME_ERRORS 1
 #define AURA_EXIT_ON_RUTIME_ERROR 1

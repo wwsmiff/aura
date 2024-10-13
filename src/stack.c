@@ -1,4 +1,5 @@
 #include "aura/stack.h"
+#include "aura/error.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -28,12 +29,20 @@ void aura_stack_push(aura_Stack_t *stack, char c) {
 }
 
 char aura_stack_pop(aura_Stack_t *stack) {
-  char c = stack->data[stack->len - 1];
-  stack->len--;
-  return c;
+  if (!aura_stack_is_empty(stack)) {
+    char c = stack->data[stack->len - 1];
+    stack->len--;
+    return c;
+  }
+  return '\0';
 }
 
-char aura_stack_top(aura_Stack_t *stack) { return stack->data[stack->len - 1]; }
+char aura_stack_top(aura_Stack_t *stack) {
+  if (aura_stack_is_empty(stack)) {
+    return AURA_STACK_EMPTY_TOP;
+  }
+  return stack->data[stack->len - 1];
+}
 
 void aura_stack_print(aura_Stack_t *stack) {
   printf("aura_stack(\n");
@@ -46,4 +55,9 @@ void aura_stack_print(aura_Stack_t *stack) {
     }
   }
   printf(")\n");
+}
+
+void aura_stack_clear(aura_Stack_t *stack) {
+  memset(stack->data, 0, stack->len * sizeof(char));
+  stack->len = 0;
 }

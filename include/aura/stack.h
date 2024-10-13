@@ -4,6 +4,8 @@
 #include "aura/string.h"
 #include <stdint.h>
 
+static const char AURA_STACK_EMPTY_TOP = '\0';
+
 typedef struct {
   char *data;
   size_t len;
@@ -17,5 +19,6 @@ bool aura_stack_is_empty(aura_Stack_t *stack);
 char aura_stack_pop(aura_Stack_t *stack);
 char aura_stack_top(aura_Stack_t *stack);
 void aura_stack_print(aura_Stack_t *stack);
+void aura_stack_clear(aura_Stack_t *stack);
 
 #endif // AURA_STACK_H_
