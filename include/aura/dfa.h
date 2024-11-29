@@ -8,14 +8,14 @@
 #define MAX_STATES 512
 
 typedef struct {
-  aura_String_t src_label;
-  aura_String_t dest_label;
+  aura_String_t src;
+  aura_State_t *dest;
   char trigger;
 } aura_Path_t;
 
 typedef struct {
   aura_State_t *states[MAX_STATES];
-  aura_State_t **paths;
+  aura_Path_t **paths;
   aura_State_t *current_state;
   aura_String_t input;
   size_t active_states;

@@ -130,7 +130,7 @@ aura_PDA_Action_t *aura_PDA_Machine_get_action(aura_PDA_Machine_t *machine,
         aura_string_compare_sd(&machine->actions[hash]->src, src)) {
       break;
     }
-    hash++;
+    hash = i;
   }
   return machine->actions[hash];
 }

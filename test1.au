@@ -4,7 +4,7 @@
 
 # DFA(set of states, set of inputs, set of final states, initial state) 
 
-machine1 = DFA({q0, q1, q2, q3}, {'a', 'b'}, {q3}, q0) # Define a machine
+machine1 = DFA({q0, q1, q2, q3}, {'a', 'b'}, {q2}, q0) # Define a machine
 
 machine1 := {
   q0: {'a'} -> q1, {'b'} -> q3
