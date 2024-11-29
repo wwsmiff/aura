@@ -4,7 +4,7 @@
 #include "aura/string.h"
 #include <stdint.h>
 
-static const char AURA_STACK_EMPTY_TOP = '\0';
+static const char EPSILON = '\0';
 
 typedef struct {
   char *data;

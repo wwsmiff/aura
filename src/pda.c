@@ -68,16 +68,16 @@ void aura_PDA_Machine_set_action(aura_PDA_Machine_t *machine, const char *src,
   if (machine->action_len != machine->input.len * machine->active_states) {
     machine->action_len = (machine->input.len * machine->input.len) *
                           (machine->active_states * machine->active_states);
-    machine->actions = (aura_PDA_Action_t *)(realloc(
-        machine->actions, sizeof(aura_PDA_Action_t) * machine->action_len));
+    machine->actions = (aura_PDA_Action_t **)(realloc(
+        machine->actions, sizeof(aura_PDA_Action_t *) * machine->action_len));
   }
   int hash = 0;
   int len = strlen(src);
   for (size_t i = 0; i < len; ++i) {
     hash += (int)(src[i]) * (i + 1);
   }
-  hash += (int)(trigger);
-  hash += (int)(stack_top);
+  hash += (trigger == EPSILON) ? 1 : (int)(trigger);
+  hash += (stack_top == EPSILON) ? 1 : (int)(stack_top);
   hash %= machine->action_len;
 
   aura_State_t *dest_state = aura_PDA_Machine_get_state(machine, dest);
@@ -85,22 +85,53 @@ void aura_PDA_Machine_set_action(aura_PDA_Machine_t *machine, const char *src,
   if (dest == NULL) {
     AURA_RUNTIME_ERROR("Unknown state '%s'.\n", dest);
   } else {
-    machine->actions[hash] = (aura_PDA_Action_t){
-        .stack_top = stack_top, .dest = dest_state, .op = op};
+    if (machine->actions[hash] != NULL) {
+      // aura_PDA_Action_t *action = machine->actions[hash];
+      // fprintf(stderr, "Trying to overwrite action %s, %c, %c, %s\n",
+      // action->src.data, action->trigger, action->stack_top,
+      // action->dest->label.data);
+      // fprintf(stderr, "with action %s, %c, %c, %s\n", src, trigger,
+      // stack_top, dest);
+      // AURA_RUNTIME_ERROR("Trying to overwrite actions.\n");
+
+      // Linear probe
+      for (size_t i = hash; i < machine->action_len; ++i) {
+        if (machine->actions[i] == NULL) {
+          hash = i;
+          break;
+        }
+      }
+    }
+    machine->actions[hash] =
+        (aura_PDA_Action_t *)(malloc(sizeof(aura_PDA_Action_t)));
+    machine->actions[hash]->src = aura_string_create_and_put(src);
+    // printf("Added action for state %s\n",
+    // machine->actions[hash]->src.data);
+    machine->actions[hash]->trigger = trigger;
+    machine->actions[hash]->stack_top = stack_top;
+    machine->actions[hash]->dest = dest_state;
+    machine->actions[hash]->op = op;
   }
 }
 
-aura_PDA_Action_t aura_PDA_Machine_get_action(aura_PDA_Machine_t *machine,
-                                              const char *src, char trigger,
-                                              char stack_top) {
+aura_PDA_Action_t *aura_PDA_Machine_get_action(aura_PDA_Machine_t *machine,
+                                               const char *src, char trigger,
+                                               char stack_top) {
   int hash = 0;
   int len = strlen(src);
   for (size_t i = 0; i < len; ++i) {
     hash += (int)(src[i]) * (i + 1);
   }
-  hash += (int)(trigger);
-  hash += (int)(stack_top);
+  hash += (trigger == EPSILON) ? 1 : (int)(trigger);
+  hash += (stack_top == EPSILON) ? 1 : (int)(stack_top);
   hash %= machine->action_len;
+  for (size_t i = hash; i < machine->action_len; ++i) {
+    if (machine->actions[hash] != NULL &&
+        aura_string_compare_sd(&machine->actions[hash]->src, src)) {
+      break;
+    }
+    hash++;
+  }
   return machine->actions[hash];
 }
 
@@ -133,13 +164,12 @@ void aura_PDA_Machine_run(aura_PDA_Machine_t *machine, const char *input) {
                        input_mismatch);
   }
 
-  for (int i = 0; i < len; ++i) {
+  for (int i = 0; i < len + 1; ++i) {
     const char *src = machine->current_state->label.data;
-    aura_PDA_Action_t action = aura_PDA_Machine_get_action(
+    aura_PDA_Action_t *action = aura_PDA_Machine_get_action(
         machine, src, input[i], aura_stack_top(&machine->stack));
-    if (action.dest != NULL) {
-      machine->current_state = action.dest;
-      switch (action.op) {
+    if (action->dest != NULL) {
+      switch (action->op) {
       case AURA_PDA_NO_OPERATION:
         break;
       case AURA_PDA_PUSH:
@@ -149,9 +179,10 @@ void aura_PDA_Machine_run(aura_PDA_Machine_t *machine, const char *input) {
         aura_stack_pop(&machine->stack);
         break;
       }
+      machine->current_state = action->dest;
     }
 
-    if (action.dest == NULL) {
+    if (action->dest == NULL) {
       AURA_RUNTIME_ERROR("Undefined path for state '%s' input '%c' with top of "
                          "the stack '%c'.\n",
                          machine->current_state->label.data, input[i],
@@ -159,8 +190,7 @@ void aura_PDA_Machine_run(aura_PDA_Machine_t *machine, const char *input) {
     }
   }
 
-  if (machine->current_state->type & AURA_STATE_FINAL ||
-      aura_stack_is_empty(&machine->stack)) {
+  if (machine->current_state->type & AURA_STATE_FINAL) {
     printf("test case: '%s', status: INPUT ACCEPETED\n", input);
   } else {
     printf("test case: '%s', status: INPUT NOT ACCEPETED\n", input);

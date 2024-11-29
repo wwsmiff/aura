@@ -39,7 +39,7 @@ char aura_stack_pop(aura_Stack_t *stack) {
 
 char aura_stack_top(aura_Stack_t *stack) {
   if (aura_stack_is_empty(stack)) {
-    return AURA_STACK_EMPTY_TOP;
+    return EPSILON;
   }
   return stack->data[stack->len - 1];
 }
