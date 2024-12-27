@@ -10,6 +10,8 @@ set(AURA_SOURCES
   src/state.c
   src/dfa.c
   src/set.c
+  src/stack.c
+  src/pda.c
 )
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/include")
 target_sources(${PROJECT_NAME} PRIVATE
@@ -30,4 +32,7 @@ endfunction()
 if(${AURA_BUILD_TESTS})
   add_test("${CMAKE_SOURCE_DIR}/tests/DFA/test_1.c" dfa_test_1)
   add_test("${CMAKE_SOURCE_DIR}/tests/DFA/test_2.c" dfa_test_2)
+
+  add_test("${CMAKE_SOURCE_DIR}/tests/PDA/test_1.c" pda_test_1)
+  # add_test("${CMAKE_SOURCE_DIR}/tests/PDA/test_2.c" pda_test_2)
 endif()

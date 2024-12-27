@@ -1,7 +1,7 @@
 #ifndef AURA_ERROR_H_
 #define AURA_ERROR_H_
 
-#include "aura/state.h"
+#include <stdio.h>
 
 #define AURA_REPORT_RUTIME_ERRORS 1
 #define AURA_EXIT_ON_RUTIME_ERROR 1
@@ -30,6 +30,11 @@
     fprintf(stderr, __VA_ARGS__);                                              \
     exit(1);                                                                   \
   } while (0);
+
+typedef enum {
+  AURA_INTERPRETER_FAILURE,
+  AURA_INTERPRETER_SUCCESS,
+} aura_InterpreterErrorType;
 
 typedef enum {
   AURA_RUNTIME_ERROR_NONE,
