@@ -67,7 +67,7 @@ void aura_DFA_Machine_set_path(aura_DFA_Machine_t *machine, aura_String_t src,
   path_hash += (int)(trigger);
   path_hash %= (machine->path_len);
   if (aura_DFA_Machine_get_state(machine, dest) == NULL) {
-    AURA_RUNTIME_ERROR("Unknown state '%s'.\n", dest);
+    AURA_RUNTIME_ERROR("Unknown state '%.*s'.\n", dest.len, dest.data);
   } else {
     if (machine->paths[path_hash] != NULL) {
       for (size_t i = path_hash; i < machine->path_len; ++i) {
@@ -151,7 +151,8 @@ aura_RuntimeErrorType aura_DFA_Machine_run(aura_DFA_Machine_t *machine,
     if (path != NULL && path->dest != NULL) {
       machine->current_state = path->dest;
     } else {
-      AURA_RUNTIME_ERROR("Undefined path for state '%s' input '%c'.\n",
+      AURA_RUNTIME_ERROR("Undefined path for state '%.*s' input '%c'.\n",
+                         machine->current_state->label.len,
                          machine->current_state->label.data, input.data[i]);
       return AURA_RUNTIME_ERROR_UNDEFINED_PATH;
     }

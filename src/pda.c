@@ -107,7 +107,7 @@ void aura_PDA_Machine_set_action(aura_PDA_Machine_t *machine, aura_String_t src,
   aura_State_t *dest_state = aura_PDA_Machine_get_state(machine, dest);
 
   if (dest_state == NULL) {
-    AURA_RUNTIME_ERROR("Unknown state '%s'.\n", dest);
+    AURA_RUNTIME_ERROR("Unknown state '%.*s'.\n", dest.len, dest.data);
   } else {
     if (machine->actions[hash] != NULL) {
       // aura_PDA_Action_t *action = machine->actions[hash];
@@ -208,10 +208,11 @@ void aura_PDA_Machine_run(aura_PDA_Machine_t *machine, aura_String_t input) {
     }
 
     if (action->dest == NULL) {
-      AURA_RUNTIME_ERROR("Undefined path for state '%s' input '%c' with top of "
-                         "the stack '%c'.\n",
-                         machine->current_state->label.data, input.data[i],
-                         aura_stack_top(&machine->stack));
+      AURA_RUNTIME_ERROR(
+          "Undefined path for state '%.*s' input '%c' with top of "
+          "the stack '%c'.\n",
+          machine->current_state->label.len, machine->current_state->label.data,
+          input.data[i], aura_stack_top(&machine->stack));
     }
   }
 

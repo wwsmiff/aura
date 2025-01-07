@@ -133,8 +133,8 @@ void aura_interpreter_parse_constructor(aura_Interpreter_t *interpreter) {
           aura_State_t *state = aura_DFA_Machine_get_state(
               interpreter->current_machine->variant.dfa, *set.data[i]);
           if (state == NULL) {
-            AURA_INTERPRETER_ERROR(interpreter, 0, "Unknown state: '%s'.\n",
-                                   set.data[i]->data);
+            AURA_INTERPRETER_ERROR(interpreter, 0, "Unknown state: '%.*s'.\n",
+                                   set.data[i]->len, set.data[i]->data);
           } else {
             aura_state_set_type(state, AURA_STATE_GENERAL | AURA_STATE_FINAL);
           }
@@ -147,7 +147,8 @@ void aura_interpreter_parse_constructor(aura_Interpreter_t *interpreter) {
             interpreter->current_machine->variant.dfa,
             interpreter->current_token.value);
         if (state == NULL) {
-          AURA_INTERPRETER_ERROR(interpreter, 0, "Unknown state: '%s'.\n",
+          AURA_INTERPRETER_ERROR(interpreter, 0, "Unknown state: '%.*s'.\n",
+                                 interpreter->current_token.value.len,
                                  interpreter->current_token.value.data);
         } else {
           aura_state_set_type(state, AURA_STATE_GENERAL | AURA_STATE_INITIAL);
