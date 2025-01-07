@@ -9,8 +9,8 @@ set(COMPILE_OPTIONS
   ${RELEASE_COMPILE_OPTIONS}
 )
 
-set(DEBUG_LINK_LIBRARIES "$<$<CONFIG:Debug>:asan;ubsan>")
-set(RELEASE_LINK_LIBRARIES "$<$<CONFIG:Release>:>")
+set(DEBUG_LINK_LIBRARIES "$<$<CONFIG:Debug>:asan;ubsan;cairo;m>")
+set(RELEASE_LINK_LIBRARIES "$<$<CONFIG:Release>:cairo;m>")
 set(LINK_LIBRARIES
   ${DEBUG_LINK_LIBRARIES}
   ${RELEASE_LINK_LIBRARIES}
@@ -34,6 +34,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ${LINK_LIBRARIES})
 target_sources(${PROJECT_NAME} PRIVATE
   ${AURA_SOURCES}
   src/interpreter.c
+  src/plotter.c
   src/main.c
 )
 
