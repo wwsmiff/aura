@@ -26,6 +26,14 @@ void aura_PDA_Machine_destroy(aura_PDA_Machine_t *machine) {
       machine->states[i] = NULL;
     }
   }
+
+  for (size_t i = 0; i < machine->action_len; ++i) {
+    if (machine->actions[i] != NULL) {
+      aura_string_destroy(&machine->actions[i]->src);
+      free(machine->actions[i]);
+    }
+  }
+
   aura_string_destroy(&machine->input);
   aura_stack_destroy(&machine->stack);
   free(machine->actions);
@@ -33,16 +41,16 @@ void aura_PDA_Machine_destroy(aura_PDA_Machine_t *machine) {
 }
 
 void aura_PDA_Machine_set_input(aura_PDA_Machine_t *machine,
-                                const char *input) {
-  aura_string_put(&machine->input, input);
+                                aura_String_t input) {
+  aura_string_copy(&machine->input, input);
 }
 
 void aura_PDA_Machine_add_state(aura_PDA_Machine_t *machine,
-                                const char *label) {
+                                aura_String_t label) {
   int hash = 0;
-  int len = strlen(label);
+  int len = label.len;
   for (size_t i = 0; i < len; ++i) {
-    hash += (int)(label[i]) * (i + 1);
+    hash += (int)(label.data[i]) * (i + 1);
   }
   hash += len;
   hash %= MAX_STATES;
@@ -51,30 +59,46 @@ void aura_PDA_Machine_add_state(aura_PDA_Machine_t *machine,
 }
 
 aura_State_t *aura_PDA_Machine_get_state(aura_PDA_Machine_t *machine,
-                                         const char *label) {
+                                         aura_String_t label) {
   int hash = 0;
-  int len = strlen(label);
+  int len = label.len;
   for (size_t i = 0; i < len; ++i) {
-    hash += (int)(label[i]) * (i + 1);
+    hash += (int)(label.data[i]) * (i + 1);
   }
   hash += len;
   hash %= MAX_STATES;
   return machine->states[hash];
 }
 
-void aura_PDA_Machine_set_action(aura_PDA_Machine_t *machine, const char *src,
-                                 char trigger, char stack_top, const char *dest,
-                                 aura_PDAOperationType op) {
-  if (machine->action_len != machine->input.len * machine->active_states) {
+void aura_PDA_Machine_set_action(aura_PDA_Machine_t *machine, aura_String_t src,
+                                 char trigger, char stack_top,
+                                 aura_String_t dest, aura_PDAOperationType op) {
+  int prev_action_len = machine->action_len;
+  if (machine->action_len !=
+      (machine->input.len * machine->input.len) * machine->active_states * 2) {
     machine->action_len = (machine->input.len * machine->input.len) *
-                          (machine->active_states * machine->active_states);
+                          (machine->active_states) * 2;
+    bool *null_mask = (bool *)(malloc(machine->action_len * sizeof(bool)));
+    memset(null_mask, 0, machine->action_len * sizeof(bool));
+    for (size_t i = 0; i < prev_action_len; ++i) {
+      if (machine->actions[i] != NULL) {
+        null_mask[i] = 1;
+      }
+    }
     machine->actions = (aura_PDA_Action_t **)(realloc(
         machine->actions, sizeof(aura_PDA_Action_t *) * machine->action_len));
+    for (size_t i = 0; i < machine->action_len; ++i) {
+      if (null_mask[i] == 0) {
+        machine->actions[i] = NULL;
+      }
+    }
+
+    free(null_mask);
   }
   int hash = 0;
-  int len = strlen(src);
+  int len = src.len;
   for (size_t i = 0; i < len; ++i) {
-    hash += (int)(src[i]) * (i + 1);
+    hash += (int)(src.data[i]) * (i + 1);
   }
   hash += (trigger == EPSILON) ? 1 : (int)(trigger);
   hash += (stack_top == EPSILON) ? 1 : (int)(stack_top);
@@ -82,8 +106,8 @@ void aura_PDA_Machine_set_action(aura_PDA_Machine_t *machine, const char *src,
 
   aura_State_t *dest_state = aura_PDA_Machine_get_state(machine, dest);
 
-  if (dest == NULL) {
-    AURA_RUNTIME_ERROR("Unknown state '%s'.\n", dest);
+  if (dest_state == NULL) {
+    AURA_RUNTIME_ERROR("Unknown state '%.*s'.\n", dest.len, dest.data);
   } else {
     if (machine->actions[hash] != NULL) {
       // aura_PDA_Action_t *action = machine->actions[hash];
@@ -104,7 +128,8 @@ void aura_PDA_Machine_set_action(aura_PDA_Machine_t *machine, const char *src,
     }
     machine->actions[hash] =
         (aura_PDA_Action_t *)(malloc(sizeof(aura_PDA_Action_t)));
-    machine->actions[hash]->src = aura_string_create_and_put(src);
+    machine->actions[hash]->src = aura_string_create();
+    aura_string_copy(&machine->actions[hash]->src, src);
     // printf("Added action for state %s\n",
     // machine->actions[hash]->src.data);
     machine->actions[hash]->trigger = trigger;
@@ -115,19 +140,19 @@ void aura_PDA_Machine_set_action(aura_PDA_Machine_t *machine, const char *src,
 }
 
 aura_PDA_Action_t *aura_PDA_Machine_get_action(aura_PDA_Machine_t *machine,
-                                               const char *src, char trigger,
+                                               aura_String_t src, char trigger,
                                                char stack_top) {
   int hash = 0;
-  int len = strlen(src);
+  int len = src.len;
   for (size_t i = 0; i < len; ++i) {
-    hash += (int)(src[i]) * (i + 1);
+    hash += (int)(src.data[i]) * (i + 1);
   }
   hash += (trigger == EPSILON) ? 1 : (int)(trigger);
   hash += (stack_top == EPSILON) ? 1 : (int)(stack_top);
   hash %= machine->action_len;
   for (size_t i = hash; i < machine->action_len; ++i) {
     if (machine->actions[hash] != NULL &&
-        aura_string_compare_sd(&machine->actions[hash]->src, src)) {
+        aura_string_compare_ss(&machine->actions[hash]->src, &src)) {
       break;
     }
     hash = i;
@@ -135,7 +160,7 @@ aura_PDA_Action_t *aura_PDA_Machine_get_action(aura_PDA_Machine_t *machine,
   return machine->actions[hash];
 }
 
-void aura_PDA_Machine_run(aura_PDA_Machine_t *machine, const char *input) {
+void aura_PDA_Machine_run(aura_PDA_Machine_t *machine, aura_String_t input) {
   aura_stack_clear(&machine->stack);
   for (size_t i = 0; i < MAX_STATES; ++i) {
     if (machine->states[i] != NULL) {
@@ -149,12 +174,12 @@ void aura_PDA_Machine_run(aura_PDA_Machine_t *machine, const char *input) {
     AURA_RUNTIME_ERROR("No initial state provided.\n");
   }
 
-  size_t len = strlen(input);
+  size_t len = input.len;
   char input_mismatch = '\0';
 
   for (size_t i = 0; i < len; ++i) {
-    if (aura_string_in(&machine->input, input[i]) == false) {
-      input_mismatch = input[i];
+    if (aura_string_in(&machine->input, input.data[i]) == false) {
+      input_mismatch = input.data[i];
       break;
     }
   }
@@ -165,15 +190,15 @@ void aura_PDA_Machine_run(aura_PDA_Machine_t *machine, const char *input) {
   }
 
   for (int i = 0; i < len + 1; ++i) {
-    const char *src = machine->current_state->label.data;
+    aura_String_t src = machine->current_state->label;
     aura_PDA_Action_t *action = aura_PDA_Machine_get_action(
-        machine, src, input[i], aura_stack_top(&machine->stack));
+        machine, src, input.data[i], aura_stack_top(&machine->stack));
     if (action->dest != NULL) {
       switch (action->op) {
       case AURA_PDA_NO_OPERATION:
         break;
       case AURA_PDA_PUSH:
-        aura_stack_push(&machine->stack, input[i]);
+        aura_stack_push(&machine->stack, input.data[i]);
         break;
       case AURA_PDA_POP:
         aura_stack_pop(&machine->stack);
@@ -183,16 +208,19 @@ void aura_PDA_Machine_run(aura_PDA_Machine_t *machine, const char *input) {
     }
 
     if (action->dest == NULL) {
-      AURA_RUNTIME_ERROR("Undefined path for state '%s' input '%c' with top of "
-                         "the stack '%c'.\n",
-                         machine->current_state->label.data, input[i],
-                         aura_stack_top(&machine->stack));
+      AURA_RUNTIME_ERROR(
+          "Undefined path for state '%.*s' input '%c' with top of "
+          "the stack '%c'.\n",
+          machine->current_state->label.len, machine->current_state->label.data,
+          input.data[i], aura_stack_top(&machine->stack));
     }
   }
 
   if (machine->current_state->type & AURA_STATE_FINAL) {
-    printf("test case: '%s', status: INPUT ACCEPETED\n", input);
+    printf("test case: '%.*s', status: INPUT ACCEPETED\n", input.len,
+           input.data);
   } else {
-    printf("test case: '%s', status: INPUT NOT ACCEPETED\n", input);
+    printf("test case: '%.*s', status: INPUT NOT ACCEPETED\n", input.len,
+           input.data);
   }
 }

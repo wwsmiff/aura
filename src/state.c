@@ -3,11 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-aura_State_t *aura_state_create(aura_StateType type, const char *label) {
+aura_State_t *aura_state_create(aura_StateType type, aura_String_t label) {
   aura_State_t *state = (aura_State_t *)(malloc(sizeof(aura_State_t)));
   state->label = aura_string_create();
   state->type = type;
-  aura_string_put(&state->label, label);
+  aura_string_copy(&state->label, label);
   return state;
 }
 

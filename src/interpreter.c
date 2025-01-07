@@ -8,13 +8,11 @@
   do {                                                                         \
     aura_Token_t token =                                                       \
         interpreter->tokens.data[interpreter->token_index + (n)];              \
-    interpreter->source.data[interpreter->current_token.line - 1]              \
-        ->data[interpreter->source.data[interpreter->current_token.line - 1]   \
-                   ->len] = '\0';                                              \
     aura_token_print(&interpreter->current_token);                             \
     char line_start[100];                                                      \
     fprintf(                                                                   \
-        stderr, "%lld | %s\n", interpreter->current_token.line,                \
+        stderr, "%lld | %.*s\n", interpreter->current_token.line,              \
+        interpreter->source.data[interpreter->current_token.line - 1]->len,    \
         interpreter->source.data[interpreter->current_token.line - 1]->data);  \
     sprintf(line_start, "%lld | \n", interpreter->current_token.line);         \
     for (size_t i = 0; i < token.start + strlen(line_start) - 2; ++i) {        \
@@ -111,9 +109,8 @@ void aura_interpreter_parse_constructor(aura_Interpreter_t *interpreter) {
                              "Expected argument 1 to be a set.\n");
         aura_String_Set_t set = aura_interpreter_parse_set(interpreter);
         for (size_t i = 0; i < set.len; ++i) {
-          set.data[i]->data[set.data[i]->len] = '\0';
           aura_DFA_Machine_add_state(interpreter->current_machine->variant.dfa,
-                                     set.data[i]->data);
+                                     *set.data[i]);
         }
         aura_string_set_destroy(&set);
       } else if (argc == 1) {
@@ -124,9 +121,8 @@ void aura_interpreter_parse_constructor(aura_Interpreter_t *interpreter) {
         for (size_t i = 0; i < set.len; ++i) {
           aura_string_append(&input, set.data[i]->data[0]);
         }
-        input.data[input.len] = '\0';
         aura_DFA_Machine_set_input(interpreter->current_machine->variant.dfa,
-                                   input.data);
+                                   input);
         aura_string_destroy(&input);
         aura_string_set_destroy(&set);
       } else if (argc == 2) {
@@ -134,12 +130,11 @@ void aura_interpreter_parse_constructor(aura_Interpreter_t *interpreter) {
                              "Expected argument 3 to be a set.\n");
         aura_String_Set_t set = aura_interpreter_parse_set(interpreter);
         for (size_t i = 0; i < set.len; ++i) {
-          set.data[i]->data[set.data[i]->len] = '\0';
           aura_State_t *state = aura_DFA_Machine_get_state(
-              interpreter->current_machine->variant.dfa, set.data[i]->data);
+              interpreter->current_machine->variant.dfa, *set.data[i]);
           if (state == NULL) {
-            AURA_INTERPRETER_ERROR(interpreter, 0, "Unknown state: '%s'.\n",
-                                   set.data[i]->data);
+            AURA_INTERPRETER_ERROR(interpreter, 0, "Unknown state: '%.*s'.\n",
+                                   set.data[i]->len, set.data[i]->data);
           } else {
             aura_state_set_type(state, AURA_STATE_GENERAL | AURA_STATE_FINAL);
           }
@@ -148,14 +143,12 @@ void aura_interpreter_parse_constructor(aura_Interpreter_t *interpreter) {
       } else if (argc == 3) {
         aura_interpreter_eat(interpreter, AURA_TOKEN_ID,
                              "Expected argument 4 to be a single state.\n");
-        interpreter->current_token.value
-            .data[interpreter->current_token.value.len] = '\0';
-
         aura_State_t *state = aura_DFA_Machine_get_state(
             interpreter->current_machine->variant.dfa,
-            interpreter->current_token.value.data);
+            interpreter->current_token.value);
         if (state == NULL) {
-          AURA_INTERPRETER_ERROR(interpreter, 0, "Unknown state: '%s'.\n",
+          AURA_INTERPRETER_ERROR(interpreter, 0, "Unknown state: '%.*s'.\n",
+                                 interpreter->current_token.value.len,
                                  interpreter->current_token.value.data);
         } else {
           aura_state_set_type(state, AURA_STATE_GENERAL | AURA_STATE_INITIAL);
@@ -214,14 +207,13 @@ void aura_define_machine(aura_Interpreter_t *interpreter) {
             aura_interpreter_consume(interpreter, 1);
             if (aura_string_compare_sd(&interpreter->current_token.value,
                                        "loop") == 1) {
-              state_label.data[state_label.len] = '\0';
               for (size_t i = 0;
                    i < interpreter->current_machine->variant.dfa->input.len;
                    ++i) {
                 aura_DFA_Machine_set_path(
-                    interpreter->current_machine->variant.dfa, state_label.data,
+                    interpreter->current_machine->variant.dfa, state_label,
                     interpreter->current_machine->variant.dfa->input.data[i],
-                    state_label.data);
+                    state_label);
               }
               aura_interpreter_consume(interpreter, 1);
             } else {
@@ -242,12 +234,9 @@ void aura_define_machine(aura_Interpreter_t *interpreter) {
         aura_interpreter_eat(interpreter, AURA_TOKEN_ID, "Expected state.\n");
         dest = interpreter->current_token.value;
         aura_interpreter_consume(interpreter, 1);
-        state_label.data[state_label.len] = '\0';
-        dest.data[dest.len] = '\0';
         for (int i = 0; i < set.len; ++i) {
           aura_DFA_Machine_set_path(interpreter->current_machine->variant.dfa,
-                                    state_label.data, set.data[i]->data[0],
-                                    dest.data);
+                                    state_label, set.data[i]->data[0], dest);
         }
         aura_string_set_destroy(&set);
       } else if (interpreter->current_token.type == AURA_TOKEN_COMMA) {
@@ -307,9 +296,8 @@ void aura_interpreter_run(aura_Interpreter_t *interpreter,
                                "Unexpected EOL.\n");
           aura_interpreter_consume(interpreter, 1);
         } else {
-          machine_type.data[machine_type.len] = '\0';
-          AURA_INTERPRETER_ERROR(interpreter, 0, "Unknown machine type '%s'",
-                                 machine_type.data);
+          AURA_INTERPRETER_ERROR(interpreter, 0, "Unknown machine type '%.*s'",
+                                 machine_type.len, machine_type.data);
         }
       } else if (CURRENT_TOKEN.type == AURA_TOKEN_DEFINE) {
         int machine_hash = 0;
@@ -322,10 +310,9 @@ void aura_interpreter_run(aura_Interpreter_t *interpreter,
         interpreter->current_machine = interpreter->machines[machine_hash];
 
         if (interpreter->current_machine == NULL) {
-          machine_id.data[machine_id.len] = '\0';
           AURA_INTERPRETER_ERROR(interpreter, 0,
-                                 "Machine '%s' does not exist.\n",
-                                 machine_id.data);
+                                 "Machine '%.*s' does not exist.\n",
+                                 machine_id.len, machine_id.data);
         }
         aura_interpreter_eat(interpreter, AURA_TOKEN_LBRACE,
                              "Expected beginning of machine definition.\n");
@@ -351,18 +338,16 @@ void aura_interpreter_run(aura_Interpreter_t *interpreter,
         machine_hash %= MAX_MACHINES;
         interpreter->current_machine = interpreter->machines[machine_hash];
         if (interpreter->current_machine == NULL) {
-          machine_id.data[machine_id.len] = '\0';
-          AURA_INTERPRETER_ERROR(interpreter, 0, "Unknown machine '%s'.\n",
-                                 machine_id.data);
+          AURA_INTERPRETER_ERROR(interpreter, 0, "Unknown machine '%.*s'.\n",
+                                 machine_id.len, machine_id.data);
         } else {
           aura_interpreter_eat(interpreter, AURA_TOKEN_COMMA,
-                               "Expected comma.\n");
+                               "Expected 2 arguments.\n");
           aura_interpreter_eat(interpreter, AURA_TOKEN_STRING,
-                               "Expected string literal.\n");
+                               "Expected input for machine.\n");
           aura_String_t test_string = interpreter->current_token.value;
-          test_string.data[test_string.len] = '\0';
           aura_DFA_Machine_run(interpreter->current_machine->variant.dfa,
-                               test_string.data);
+                               test_string);
           aura_interpreter_eat(interpreter, AURA_TOKEN_RPAREN,
                                "Expected end of function call.\n");
         }

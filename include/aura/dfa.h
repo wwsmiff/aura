@@ -25,16 +25,18 @@ typedef struct {
 aura_DFA_Machine_t *aura_DFA_Machine_create();
 void aura_DFA_Machine_destroy(aura_DFA_Machine_t *machine);
 
-void aura_DFA_Machine_set_input(aura_DFA_Machine_t *machine, const char *input);
-void aura_DFA_Machine_add_state(aura_DFA_Machine_t *machine, const char *label);
+void aura_DFA_Machine_set_input(aura_DFA_Machine_t *machine,
+                                aura_String_t input);
+void aura_DFA_Machine_add_state(aura_DFA_Machine_t *machine,
+                                aura_String_t label);
 
-void aura_DFA_Machine_set_path(aura_DFA_Machine_t *machine, const char *src,
-                               char trigger, const char *dest);
+void aura_DFA_Machine_set_path(aura_DFA_Machine_t *machine, aura_String_t src,
+                               char trigger, aura_String_t dest);
 
 aura_RuntimeErrorType aura_DFA_Machine_run(aura_DFA_Machine_t *machine,
-                                           const char *input);
+                                           aura_String_t input);
 
 aura_State_t *aura_DFA_Machine_get_state(aura_DFA_Machine_t *machine,
-                                         const char *label);
+                                         aura_String_t label);
 
 #endif // AURA_DFA_H_

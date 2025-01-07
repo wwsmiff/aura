@@ -37,6 +37,15 @@ void aura_string_put(aura_String_t *string, const char *data) {
   }
 }
 
+void aura_string_copy(aura_String_t *dest, aura_String_t src) {
+  // if (dest == NULL) {
+  // *dest = aura_string_create();
+  // }
+  for (size_t i = 0; i < src.len; ++i) {
+    aura_string_append(dest, src.data[i]);
+  }
+}
+
 void aura_string_clear(aura_String_t *string) {
   memset(string->data, 0, string->len * sizeof(char));
   string->len = 0;
@@ -59,7 +68,7 @@ aura_String_t aura_string_create_and_put(const char *data) {
 }
 
 bool aura_string_compare_ss(aura_String_t *s1, aura_String_t *s2) {
-  if (s1->len == s2->len) {
+  if (s1->len != s2->len) {
     return false;
   }
 
