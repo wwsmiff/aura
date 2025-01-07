@@ -8,13 +8,11 @@
   do {                                                                         \
     aura_Token_t token =                                                       \
         interpreter->tokens.data[interpreter->token_index + (n)];              \
-    interpreter->source.data[interpreter->current_token.line - 1]              \
-        ->data[interpreter->source.data[interpreter->current_token.line - 1]   \
-                   ->len] = '\0';                                              \
     aura_token_print(&interpreter->current_token);                             \
     char line_start[100];                                                      \
     fprintf(                                                                   \
-        stderr, "%lld | %s\n", interpreter->current_token.line,                \
+        stderr, "%lld | %.*s\n", interpreter->current_token.line,              \
+        interpreter->source.data[interpreter->current_token.line - 1]->len,    \
         interpreter->source.data[interpreter->current_token.line - 1]->data);  \
     sprintf(line_start, "%lld | \n", interpreter->current_token.line);         \
     for (size_t i = 0; i < token.start + strlen(line_start) - 2; ++i) {        \
@@ -355,9 +353,9 @@ void aura_interpreter_run(aura_Interpreter_t *interpreter,
                                  machine_id.data);
         } else {
           aura_interpreter_eat(interpreter, AURA_TOKEN_COMMA,
-                               "Expected comma.\n");
+                               "Expected 2 arguments.\n");
           aura_interpreter_eat(interpreter, AURA_TOKEN_STRING,
-                               "Expected string literal.\n");
+                               "Expected input for machine.\n");
           aura_String_t test_string = interpreter->current_token.value;
           test_string.data[test_string.len] = '\0';
           aura_DFA_Machine_run(interpreter->current_machine->variant.dfa,
