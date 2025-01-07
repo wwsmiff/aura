@@ -34,18 +34,20 @@ typedef struct {
 aura_PDA_Machine_t *aura_PDA_Machine_create();
 void aura_PDA_Machine_destroy(aura_PDA_Machine_t *machine);
 
-void aura_PDA_Machine_set_input(aura_PDA_Machine_t *machine, const char *input);
-void aura_PDA_Machine_add_state(aura_PDA_Machine_t *machine, const char *label);
+void aura_PDA_Machine_set_input(aura_PDA_Machine_t *machine,
+                                aura_String_t input);
+void aura_PDA_Machine_add_state(aura_PDA_Machine_t *machine,
+                                aura_String_t label);
 aura_State_t *aura_PDA_Machine_get_state(aura_PDA_Machine_t *machine,
-                                         const char *label);
-void aura_PDA_Machine_set_action(aura_PDA_Machine_t *machine, const char *src,
-                                 char trigger, char stack_top, const char *dest,
-                                 aura_PDAOperationType op);
+                                         aura_String_t label);
+void aura_PDA_Machine_set_action(aura_PDA_Machine_t *machine, aura_String_t src,
+                                 char trigger, char stack_top,
+                                 aura_String_t dest, aura_PDAOperationType op);
 
 aura_PDA_Action_t *aura_PDA_Machine_get_action(aura_PDA_Machine_t *machine,
-                                               const char *src, char trigger,
+                                               aura_String_t src, char trigger,
                                                char stack_top);
 
-void aura_PDA_Machine_run(aura_PDA_Machine_t *machine, const char *input);
+void aura_PDA_Machine_run(aura_PDA_Machine_t *machine, aura_String_t input);
 
 #endif // AURA_PDA_H_
