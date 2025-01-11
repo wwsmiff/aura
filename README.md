@@ -44,6 +44,7 @@ run(machine1, 'aabb') # should be accepted.
 ## Dependencies:
 - C Compiler
 - Cmake
+- Cairo (for plotting)
 
 ## Build and run:
 ```
