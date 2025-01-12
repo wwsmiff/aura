@@ -7,10 +7,11 @@
 #include <stdlib.h>
 
 #define AURA_STATE_OUTLINE_RADIUS 35.0f
-#define AURA_OUTER_RADIUS_COEFFICIENT 1.2f
-#define AURA_STATE_OUTER_RADIUS                                                \
-  (AURA_STATE_OUTLINE_RADIUS * AURA_OUTER_RADIUS_COEFFICIENT)
-#define AURA_TEXT_SIZE 20.0f
+#define AURA_INNER_RADIUS_COEFFICIENT 1.2f
+#define AURA_STATE_INNER_RADIUS                                                \
+  (AURA_STATE_OUTLINE_RADIUS / AURA_INNER_RADIUS_COEFFICIENT)
+#define AURA_FONT_SIZE 20.0f
+#define AURA_FONT_FACE "Noto Sans Mono"
 #define AURA_PADDING 15.0f
 #define AURA_ARROW_HEAD_ANGLE (M_PI / 4.0f)
 #define AURA_ARROW_HEAD_LENGTH 10.0f
@@ -40,7 +41,9 @@ aura_Plotter_t *aura_plotter_create(float width, float height) {
       cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
   plotter->cairo_context = cairo_create(plotter->cairo_surface);
 
-  printf("Created %.0fx%.0f plotter.\n", plotter->width, plotter->height);
+  cairo_select_font_face(plotter->cairo_context, AURA_FONT_FACE,
+                         CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+  cairo_set_font_size(plotter->cairo_context, AURA_FONT_SIZE);
 
   return plotter;
 }
@@ -102,17 +105,10 @@ void aura_plotter_draw_state(aura_Plotter_t *plotter, aura_State_Info_t info) {
   if (info.type & AURA_STATE_FINAL) {
     cairo_new_path(plotter->cairo_context);
     cairo_arc(plotter->cairo_context, info.pos.x, info.pos.y,
-              AURA_STATE_OUTER_RADIUS, 0.0f, 2 * M_PI);
+              AURA_STATE_INNER_RADIUS, 0.0f, 2 * M_PI);
     cairo_stroke(plotter->cairo_context);
   }
-  if (info.type == (AURA_STATE_INITIAL | AURA_STATE_FINAL)) {
-    cairo_new_path(plotter->cairo_context);
-    aura_plotter_draw_path(
-        plotter, (aura_Path_Info_t){
-                     {info.pos.x - AURA_STATE_OUTER_RADIUS - 50.0f, info.pos.y},
-                     {info.pos.x - AURA_STATE_OUTER_RADIUS, info.pos.y},
-                     AURA_STRING_LITERAL("")});
-  } else if (info.type == AURA_STATE_INITIAL) {
+  if (info.type & AURA_STATE_INITIAL) {
     cairo_new_path(plotter->cairo_context);
     aura_plotter_draw_path(
         plotter,
@@ -125,12 +121,12 @@ void aura_plotter_draw_state(aura_Plotter_t *plotter, aura_State_Info_t info) {
   cairo_text_extents_t extents;
   cairo_text_extents(plotter->cairo_context, label_data, &extents);
   cairo_move_to(plotter->cairo_context, info.pos.x - (extents.width / 2),
-                info.pos.y + (extents.height / 2));
+                info.pos.y + (extents.height / 4));
   cairo_show_text(plotter->cairo_context, label_data);
+  return;
 }
 
 void aura_plotter_plot(aura_Plotter_t *plotter) {
-  cairo_set_font_size(plotter->cairo_context, AURA_TEXT_SIZE);
   cairo_new_path(plotter->cairo_context);
   cairo_set_source_rgb(plotter->cairo_context, 1.0f, 1.0f, 1.0f);
   cairo_rectangle(plotter->cairo_context, 0.0f, 0.0f, plotter->width,
@@ -145,12 +141,12 @@ void aura_plotter_plot(aura_Plotter_t *plotter) {
   aura_plotter_draw_state(
       plotter,
       (aura_State_Info_t){.label = AURA_STRING_LITERAL("q1"),
-                          .pos = {150.0f, 300.0f},
+                          .pos = {150.0f, 250.0f},
                           .type = AURA_STATE_INITIAL | AURA_STATE_FINAL});
 
   aura_plotter_draw_state(
       plotter, (aura_State_Info_t){.label = AURA_STRING_LITERAL("q2"),
-                                   .pos = {150.0f, 400.0f},
+                                   .pos = {150.0f, 350.0f},
                                    .type = AURA_STATE_FINAL});
 }
 
