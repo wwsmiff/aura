@@ -4,7 +4,7 @@
 #include "aura/string.h"
 #include <stdint.h>
 
-#define KEYWORDS 3
+#define KEYWORDS 4
 
 typedef enum {
   AURA_TOKEN_NONE,
@@ -27,7 +27,7 @@ typedef enum {
 
 /* clang-format off */
 
-static const char const *aura_token_str_table[] = {
+static const char *aura_token_str_table[] = {
   [AURA_TOKEN_NONE] = "token_none",
   [AURA_TOKEN_COMMENT] = "token_comment",         
   [AURA_TOKEN_ID] = "token_id",         
@@ -47,10 +47,11 @@ static const char const *aura_token_str_table[] = {
 };
 
 
-static const char const *aura_reserved_keywords[] = {
+static const char *aura_reserved_keywords[] = {
   "run",
   "loop",
-  "DFA"
+  "DFA",
+  "plot"
 };
 
 /* clang-format off */

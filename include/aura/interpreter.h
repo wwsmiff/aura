@@ -2,22 +2,12 @@
 #define AURA_INTERPRETER_H_
 
 #include "aura/dfa.h"
+#include "aura/machine.h"
 #include "aura/set.h"
 #include "aura/string.h"
 #include "aura/token.h"
 
 #define MAX_MACHINES 512
-
-typedef enum { AURA_MACHINE_DFA } aura_MachineType;
-
-typedef union {
-  aura_DFA_Machine_t *dfa;
-} aura_Machine_Variant_t;
-
-typedef struct {
-  aura_MachineType type;
-  aura_Machine_Variant_t variant;
-} aura_Machine_t;
 
 typedef struct {
   aura_Token_Array_t tokens;

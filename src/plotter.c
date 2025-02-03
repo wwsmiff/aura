@@ -126,29 +126,7 @@ void aura_plotter_draw_state(aura_Plotter_t *plotter, aura_State_Info_t info) {
   return;
 }
 
-void aura_plotter_plot(aura_Plotter_t *plotter) {
-  cairo_new_path(plotter->cairo_context);
-  cairo_set_source_rgb(plotter->cairo_context, 1.0f, 1.0f, 1.0f);
-  cairo_rectangle(plotter->cairo_context, 0.0f, 0.0f, plotter->width,
-                  plotter->height);
-  cairo_fill(plotter->cairo_context);
-
-  aura_plotter_draw_state(
-      plotter, (aura_State_Info_t){.label = AURA_STRING_LITERAL("q0"),
-                                   .pos = {150.0f, 150.0f},
-                                   .type = AURA_STATE_INITIAL});
-
-  aura_plotter_draw_state(
-      plotter,
-      (aura_State_Info_t){.label = AURA_STRING_LITERAL("q1"),
-                          .pos = {150.0f, 250.0f},
-                          .type = AURA_STATE_INITIAL | AURA_STATE_FINAL});
-
-  aura_plotter_draw_state(
-      plotter, (aura_State_Info_t){.label = AURA_STRING_LITERAL("q2"),
-                                   .pos = {150.0f, 350.0f},
-                                   .type = AURA_STATE_FINAL});
-}
+void aura_plotter_plot(aura_Plotter_t *plotter, aura_Machine_t *machine) {}
 
 void aura_plotter_export_to_png(aura_Plotter_t *plotter, const char *path) {
   cairo_surface_write_to_png(plotter->cairo_surface, path);

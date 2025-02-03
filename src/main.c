@@ -30,8 +30,9 @@ int aura_run_file(const char *path) {
       aura_string_put(&source, line);
     }
 
-    aura_interpreter_run(interpreter, &source);
     fclose(source_file);
+
+    aura_interpreter_run(interpreter, &source);
     aura_interpreter_destroy(interpreter);
     aura_string_destroy(&source);
   }
@@ -52,11 +53,6 @@ int main(int argc, char **argv) {
     if (err != 0) {
       return err;
     }
-  } else if (strcmp(argv[0], "plot") == 0) {
-    aura_Plotter_t *plotter = aura_plotter_create(800.0f, 600.0f);
-    aura_plotter_plot(plotter);
-    aura_plotter_export_to_png(plotter, "test.png");
-    aura_plotter_destroy(plotter);
   } else if (strcmp(argv[0], "help") == 0) {
     fprintf(stderr, "");
     return 1;

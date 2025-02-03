@@ -8,7 +8,6 @@
   do {                                                                         \
     aura_Token_t token =                                                       \
         interpreter->tokens.data[interpreter->token_index + (n)];              \
-    aura_token_print(&interpreter->current_token);                             \
     char line_start[100];                                                      \
     fprintf(                                                                   \
         stderr, "%lld | %.*s\n", interpreter->current_token.line,              \
@@ -71,7 +70,7 @@ void aura_interpreter_eat(aura_Interpreter_t *interpreter, aura_TokenType type,
   if (aura_interpreter_peek(interpreter, 1).type == type) {
     aura_interpreter_consume(interpreter, 1);
   } else {
-    aura_token_print(&interpreter->current_token);
+    // aura_token_print(&interpreter->current_token);
     AURA_INTERPRETER_ERROR(interpreter, 0, message);
   }
 }
@@ -350,6 +349,29 @@ void aura_interpreter_run(aura_Interpreter_t *interpreter,
                                test_string);
           aura_interpreter_eat(interpreter, AURA_TOKEN_RPAREN,
                                "Expected end of function call.\n");
+        }
+        aura_interpreter_eat(interpreter, AURA_TOKEN_EOL, "Unexpected EOL.\n");
+        continue;
+      } else if (aura_string_compare_sd(&CURRENT_TOKEN.value, "plot")) {
+        aura_interpreter_eat(interpreter, AURA_TOKEN_LPAREN,
+                             "Expected open paranthesis.\n");
+        aura_interpreter_eat(interpreter, AURA_TOKEN_ID,
+                             "Expected machine name.\n");
+        aura_String_t machine_id = interpreter->current_token.value;
+        int machine_hash = 0;
+        for (size_t i = 0; i < machine_id.len; ++i) {
+          machine_hash += (int)(machine_id.data[i]) * (i + 1);
+        }
+        machine_hash += machine_id.len;
+        machine_hash %= MAX_MACHINES;
+        interpreter->current_machine = interpreter->machines[machine_hash];
+        if (interpreter->current_machine == NULL) {
+          AURA_INTERPRETER_ERROR(interpreter, 0, "Unknown machine '%.*s'.\n",
+                                 machine_id.len, machine_id.data);
+        } else {
+          aura_interpreter_eat(interpreter, AURA_TOKEN_RPAREN,
+                               "Expected end of function call.\n");
+          printf("Plotting machine\n");
         }
         aura_interpreter_eat(interpreter, AURA_TOKEN_EOL, "Unexpected EOL.\n");
         continue;
