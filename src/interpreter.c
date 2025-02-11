@@ -1,4 +1,6 @@
 #include "aura/interpreter.h"
+#include "aura/machine.h"
+#include "aura/plotter.h"
 #include "aura/set.h"
 #include "aura/token.h"
 #include <stdio.h>
@@ -259,6 +261,15 @@ void aura_define_machine(aura_Interpreter_t *interpreter) {
   }
 }
 
+void aura_interpreter_plot(aura_Interpreter_t *interpreter,
+                           aura_String_t machine_id) {
+  aura_Machine_t *current_machine = interpreter->current_machine;
+  aura_Plotter_t *plotter = aura_plotter_create(1280.0f, 720.0f);
+  aura_plotter_plot(plotter, interpreter->current_machine);
+  aura_plotter_export_to_png(plotter, "test.png");
+  aura_plotter_destroy(plotter);
+}
+
 void aura_interpreter_run(aura_Interpreter_t *interpreter,
                           aura_String_t *string) {
   aura_String_t line = aura_string_create();
@@ -371,7 +382,7 @@ void aura_interpreter_run(aura_Interpreter_t *interpreter,
         } else {
           aura_interpreter_eat(interpreter, AURA_TOKEN_RPAREN,
                                "Expected end of function call.\n");
-          printf("Plotting machine\n");
+          aura_interpreter_plot(interpreter, machine_id);
         }
         aura_interpreter_eat(interpreter, AURA_TOKEN_EOL, "Unexpected EOL.\n");
         continue;
